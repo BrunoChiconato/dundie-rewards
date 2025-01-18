@@ -30,7 +30,7 @@ jobs:
           pip install -r requirements.test.txt
           pip install -e .
       - name: Run tests
-        run: make testci
+        run: pytest -v --junitxml=test-result.xml
       - name: Publish junit results
         uses: EnricoMi/publish-unit-test-result-action@v1
         if: always()
