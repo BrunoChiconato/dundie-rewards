@@ -13,7 +13,7 @@ on:
 
 jobs:
   tests:
-    strategies:
+    strategy:
       fail-fast: false
       matrix:
         os: [ubuntu-latest]
