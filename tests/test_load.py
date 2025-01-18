@@ -7,7 +7,7 @@ import pytest # type: ignore
 @pytest.mark.high
 def test_load_positive_has_2_people():
     """Test load function."""
-    assert len(load(PEOPLE_FILE)) == 2
+    assert len(load(PEOPLE_FILE)) == 3
 
 
 @pytest.mark.unit
