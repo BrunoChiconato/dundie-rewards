@@ -1,5 +1,7 @@
 # Dundie Rewards Project
 
+[![CI](https://github.com/BrunoChiconato/dundie-rewards/actions/workflows/main.yml/badge.svg)](https://github.com/BrunoChiconato/dundie-rewards/actions/workflows/main.yml)
+
 We have been hired by Dunder Mifflin, a major paper manufacturer, to develop a rewards system for their employees.
 
 Michael, the company manager, wants to increase employee motivation by offering a points system that employees can accumulate according to their achieved goals, bonuses offered by the manager, and employees can also exchange points among themselves.
