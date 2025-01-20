@@ -1,6 +1,7 @@
+import pytest  # type: ignore
+
 from dundie.core import load
 from tests.constants import PEOPLE_FILE
-import pytest # type: ignore
 
 
 @pytest.mark.unit
@@ -15,4 +16,3 @@ def test_load_positive_has_2_people():
 def test_load_positive_name_starts_with_j():
     """Test load function."""
     assert load(PEOPLE_FILE)[0][0] == "J"
-

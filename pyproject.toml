@@ -12,3 +12,24 @@ exclude = [
     "build",
 ]
 max-line-length = 79
+
+[tool.black]
+line-length = 79
+target-version = ['py36', 'py37']
+exclude = '''
+/(
+      \.git,
+    | \.eggs,
+    | \.venv,
+    | __pycache__,
+    | _build,
+    | build,
+    | migrations,
+    | dist,
+)/
+'''
+
+[tool.isort]
+profile = "black"
+src_paths = ["dundie", "tests", "integration"]
+multi_line_output = 3

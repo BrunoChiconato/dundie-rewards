@@ -31,7 +31,11 @@ jobs:
           pip install -e .
       - name: Look for style errors
         run: pflake8
-        
+      - name: Check for importing style
+        run: isort --profile=black- -check-only --diff dundie tests integration
+      - name: Look for auto formatting errors
+        run: black --check --diff dundie tests integration
+
   tests:
     needs: lint
     strategy:
