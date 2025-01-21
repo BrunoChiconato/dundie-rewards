@@ -1,7 +1,11 @@
 import os
-from subprocess import CalledProcessError, check_output
 
-import pytest  # type: ignore
+import pytest
+from click.testing import CliRunner
+
+from dundie.cli import load, main
+
+cmd = CliRunner()
 
 
 @pytest.mark.integration
@@ -11,10 +15,8 @@ def test_load_positive_call_load_command():
     csv_path = os.path.join(
         os.path.dirname(__file__), "..", "tests", "assets", "people.csv"
     )
-    out = (
-        check_output(["dundie", "load", csv_path]).decode("utf-8").split("\n")
-    )
-    assert len(out) == 2
+    out = cmd.invoke(load, csv_path)
+    assert "Dundler Mifflin Employees" in out.output
 
 
 @pytest.mark.integration
@@ -27,9 +29,7 @@ def test_load_negative_call_load_command_with_wrong_params(wrong_command):
     csv_path = os.path.join(
         os.path.dirname(__file__), "..", "tests", "assets", "people.csv"
     )
-    with pytest.raises(CalledProcessError) as error:
-        check_output(["dundie", wrong_command, csv_path]).decode(
-            "utf-8"
-        ).split("\n")
+    out = cmd.invoke(main, wrong_command, csv_path)
 
-    assert "status 2" in str(error.getrepr())
+    assert out.exit_code != 0
+    assert f"No such command '{wrong_command}'." in out.output
