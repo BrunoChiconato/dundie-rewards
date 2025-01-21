@@ -12,6 +12,7 @@ exclude = [
     "build",
 ]
 max-line-length = 79
+ignore = "F401"
 
 [tool.black]
 line-length = 79
