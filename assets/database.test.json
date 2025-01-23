@@ -1,0 +1,28 @@
+{
+    "people": {
+        "joe@doe.com":{
+            "role": "Salesman",
+            "dept": "Sales",
+            "active": true,
+            "name": "Joe"
+        }
+    },
+    "balance": {
+        "joe@doe.com": 500
+    },
+    "movement": {
+        "joe@doe.com": [
+            {
+                "date": "", 
+                "value": 0,
+                "actor": "system"
+            }
+        ]
+    },
+    "users": {
+        "joe@doe.com": {
+            "password": "1234",
+            "is_admin": false
+        }
+    }
+}
