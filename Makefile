@@ -1,4 +1,4 @@
-.PHONY: virtualenv install ipython clean test watch pflake8
+.PHONY: install virtualenv ipython clean test pflake8 fmt lint watch docs docs-serve build publish publish-test
 
 install:
 	@echo "Installing for dev environment"
@@ -35,9 +35,21 @@ clean:            ## Clean unused files.
 test:
 	@.venv/bin/pytest -s --forked
 
-testci:
-	@.venv/bin/pytest -v
-
 watch:
 	# @.venv/bin/ptw -- -vv -s
 	@ls **/*.py | entr pytest --forked
+
+docs:
+	@mkdocs build --clean
+
+docs-serve:
+	@mkdocs serve
+
+build:
+	@python setup.py sdist bdist_wheel
+
+publish-test:
+	@twine upload --repository testpypi dist/*
+
+publish:
+	@twine upload dist/*

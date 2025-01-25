@@ -1,6 +1,6 @@
 import os
 
-from setuptools import setup  # type: ignore
+from setuptools import setup, find_packages
 
 
 def read(*paths):
@@ -33,7 +33,8 @@ setup(
     long_description_content_type="text/markdown",
     author="Bruno Chiconato",
     python_requires=">=3.8.0",
-    packages=["dundie"],
+    packages=find_packages(exclude=["integration"]),
+    include_package_data=True,
     entry_points={"console_scripts": ["dundie = dundie.__main__:main"]},
     install_requires=read_requirements("requirements.txt"),
     extras_require={
