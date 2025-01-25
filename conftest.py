@@ -28,5 +28,5 @@ def setup_testing_database(request):
     """
     tmpdir = request.getfixturevalue("tmpdir")
     test_db = str(tmpdir.join("database.test.json"))
-    with patch("dundie.settings.DATABASE_PATH", test_db):
+    with patch("dundie.database.DATABASE_PATH", test_db):
         yield

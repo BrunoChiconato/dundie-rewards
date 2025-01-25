@@ -33,11 +33,11 @@ clean:            ## Clean unused files.
 	@rm -rf docs/_build
 
 test:
-	@.venv/bin/pytest -s
+	@.venv/bin/pytest -s --forked
 
 testci:
-	@.venv/bin/pytest -v --junitxml=test-result.xml
+	@.venv/bin/pytest -v
 
 watch:
 	# @.venv/bin/ptw -- -vv -s
-	@ls **/*.py | entr pytest
+	@ls **/*.py | entr pytest --forked

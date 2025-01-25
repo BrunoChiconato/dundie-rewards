@@ -37,19 +37,24 @@ def add_person(db, pk, data):
     if not check_valid_email(pk):
         raise ValueError(f"Invalid email address: {pk}")
 
-    table = db("people")
+    table = db["people"]
     person = table.get(pk, {})
     created = not bool(person)
     person.update(data)
     table[pk] = person
     if created:
         set_initial_balance(db, pk, person)
-        password = generate_simple_password(8)
-        db["balance"][pk] = 100 if person["role"] == "Manager" else 500
-        db["users"][pk] = "password123"
+        password = set_initial_password(db, pk)
         send_email(EMAIL_FROM, pk, "Your dundie password", password)
         # TODO: Encrypt and send only link, not password.
     return person, created
+
+
+def set_initial_password(db, pk):
+    """Generate and saves a simple password."""
+    db["users"].setdefault(pk, {})
+    db["users"][pk]["password"] = generate_simple_password()
+    return db["users"][pk]["password"]
 
 
 def set_initial_balance(db, pk, person):
@@ -63,7 +68,7 @@ def add_movement(db, pk, value, actor="system"):
     movements = db["movement"].setdefault(pk, [])
     movements.append(
         {
-            "date": datetime.now().isoformat(),
+            "date": datetime.datetime.now().isoformat(),
             "actor": actor,
             "value": value,
         }
