@@ -17,7 +17,7 @@
         }
     },
     "balance": {
-        "jim@dundiermifflin.com": 500,
+        "jim@dundiermifflin.com": 600,
         "schrute@dundiermifflin.com": 100,
         "glewis@dundiermifflin.com": 100
     },
@@ -57,6 +57,11 @@
                 "date": "2025-01-25T15:46:41.654546",
                 "actor": "bruno",
                 "value": -30
+            },
+            {
+                "date": "2025-01-25T16:29:33.059578",
+                "actor": "bruno",
+                "value": 100
             }
         ],
         "schrute@dundiermifflin.com": [

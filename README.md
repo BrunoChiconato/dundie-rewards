@@ -41,3 +41,19 @@ The current employee data will be provided in a file that can be in .csv or .jso
 - As an EMPLOYEE, I want to be able to transfer points to another employee.
 
 - As an EMPLOYEE, I want operations to be password-protected, preventing another user from altering my account.
+
+## Installation
+
+```py
+pip install dundie-rewards
+```
+
+```py
+pip install -e '.[dev]'
+```
+
+## Usage
+
+```py
+dundie load assets/people.csv
+```
