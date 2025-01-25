@@ -27,6 +27,36 @@
                 "date": "2025-01-25T14:58:28.287648",
                 "actor": "system",
                 "value": 500
+            },
+            {
+                "date": "2025-01-25T15:40:50.518869",
+                "actor": "bruno",
+                "value": 30
+            },
+            {
+                "date": "2025-01-25T15:44:34.942329",
+                "actor": "bruno",
+                "value": -30
+            },
+            {
+                "date": "2025-01-25T15:45:33.747380",
+                "actor": "bruno",
+                "value": 30
+            },
+            {
+                "date": "2025-01-25T15:45:43.877127",
+                "actor": "bruno",
+                "value": -30
+            },
+            {
+                "date": "2025-01-25T15:46:28.681992",
+                "actor": "bruno",
+                "value": 30
+            },
+            {
+                "date": "2025-01-25T15:46:41.654546",
+                "actor": "bruno",
+                "value": -30
             }
         ],
         "schrute@dundiermifflin.com": [
@@ -34,6 +64,36 @@
                 "date": "2025-01-25T14:58:28.289012",
                 "actor": "system",
                 "value": 100
+            },
+            {
+                "date": "2025-01-25T15:40:50.518878",
+                "actor": "bruno",
+                "value": 30
+            },
+            {
+                "date": "2025-01-25T15:44:34.942338",
+                "actor": "bruno",
+                "value": -30
+            },
+            {
+                "date": "2025-01-25T15:45:33.747391",
+                "actor": "bruno",
+                "value": 30
+            },
+            {
+                "date": "2025-01-25T15:45:43.877137",
+                "actor": "bruno",
+                "value": -30
+            },
+            {
+                "date": "2025-01-25T15:46:28.682005",
+                "actor": "bruno",
+                "value": 30
+            },
+            {
+                "date": "2025-01-25T15:46:41.654556",
+                "actor": "bruno",
+                "value": -30
             }
         ],
         "glewis@dundiermifflin.com": [
