@@ -11,7 +11,7 @@ click.rich_click.USE_RICH_MARKUP = True
 click.rich_click.USE_MARKDOWN = True
 click.rich_click.SHOW_ARGUMENTS = True
 click.rich_click.GROUP_ARGUMENTS_OPTIONS = True
-click.rich_click.SHOW_METAVARS_COLUMN = True
+click.rich_click.SHOW_METAVARS_COLUMN = False
 click.rich_click.APPEND_METAVARS_HELP = True
 
 
@@ -34,7 +34,7 @@ def load(filepath):
     - Loads to the database.
     """
     table = Table(title="Dundler Mifflin Employees")
-    headers = ["name", "department", "role", "created", "e-mail"]
+    headers = ["email", "name", "dept", "role", "created"]
 
     for header in headers:
         table.add_column(header, style="cyan")

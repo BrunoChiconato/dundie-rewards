@@ -1,76 +1,20 @@
-import datetime
-import json
+import warnings
 
-from dundie.settings import DATABASE_PATH, EMAIL_FROM
-from dundie.utils.email import check_valid_email, send_email
-from dundie.utils.user import generate_simple_password
+from sqlalchemy.exc import SAWarning  # type: ignore
+from sqlmodel import Session, create_engine  # type: ignore
+from sqlmodel.sql.expression import Select, SelectOfScalar  # type: ignore
 
-EMPTY_DB = {"people": {}, "balance": {}, "movement": {}, "users": {}}
+from dundie import models
+from dundie.settings import SQL_CON_STRING
 
+SelectOfScalar.inherit_cache = True  # type: ignore
+Select.inherit_cache = True  # type: ignore
 
-def connect() -> dict:
-    """Connect to the database. Returns dict data."""
-    try:
-        with open(DATABASE_PATH, "r") as database_file:
-            return json.loads(database_file.read())
-    except (json.JSONDecodeError, FileNotFoundError):
-        return EMPTY_DB
+warnings.filterwarnings("ignore", category=SAWarning)
 
-
-def commit(db):
-    """Commit changes to the database."""
-    if db.keys() != EMPTY_DB.keys():
-        raise RuntimeError("Invalid database schema.")
-
-    with open(DATABASE_PATH, "w") as database_file:
-        database_file.write(json.dumps(db, indent=4))
+engine = create_engine(SQL_CON_STRING, echo=False)
+models.SQLModel.metadata.create_all(engine)
 
 
-def add_person(db, pk, data):
-    """Add person to database.
-
-    - Email is unique (resolved by dictionary hash table).
-    - If exists, update, ele create.
-    - Set initial balance (managers = 100, others = 500).
-    - Generate a password if user is new and send email.
-    """
-    if not check_valid_email(pk):
-        raise ValueError(f"Invalid email address: {pk}")
-
-    table = db["people"]
-    person = table.get(pk, {})
-    created = not bool(person)
-    person.update(data)
-    table[pk] = person
-    if created:
-        set_initial_balance(db, pk, person)
-        password = set_initial_password(db, pk)
-        send_email(EMAIL_FROM, pk, "Your dundie password", password)
-        # TODO: Encrypt and send only link, not password.
-    return person, created
-
-
-def set_initial_password(db, pk):
-    """Generate and saves a simple password."""
-    db["users"].setdefault(pk, {})
-    db["users"][pk]["password"] = generate_simple_password()
-    return db["users"][pk]["password"]
-
-
-def set_initial_balance(db, pk, person):
-    """Add movement and set initial balance."""
-    value = 100 if person["role"] == "Manager" else 500
-    add_movement(db, pk, value)
-
-
-def add_movement(db, pk, value, actor="system"):
-    """Add movement to balance."""
-    movements = db["movement"].setdefault(pk, [])
-    movements.append(
-        {
-            "date": datetime.datetime.now().isoformat(),
-            "actor": actor,
-            "value": value,
-        }
-    )
-    db["balance"][pk] = sum(item["value"] for item in movements)
+def get_session() -> Session:
+    return Session(engine)

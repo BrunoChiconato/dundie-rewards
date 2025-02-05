@@ -2,11 +2,19 @@
 
 import os
 from csv import reader
+from typing import Any, Dict, List
 
-from dundie.database import add_movement, add_person, commit, connect
+from sqlmodel import select  # type: ignore
+
+from dundie.database import get_session
+from dundie.models import Person
+from dundie.settings import DATEFMT
+from dundie.utils.db import add_movement, add_person
 from dundie.utils.log import get_logger
 
 log = get_logger()
+Query = Dict[str, Any]
+ResultDict = List[Dict[str, Any]]
 
 
 def load(filepath):
@@ -17,55 +25,69 @@ def load(filepath):
         log.error(str(e))
         raise e
 
-    db = connect()
     people = []
-    headers = ["name", "department", "role", "e-mail"]
-    for line in csv_data:
-        person_data = dict(zip(headers, [line.strip() for line in line]))
-        pk = person_data.pop("e-mail")
-        person, created = add_person(db, pk, person_data)
+    headers = ["name", "dept", "role", "email"]
 
-        return_data = person.copy()
-        return_data["created"] = created
-        return_data["e-mail"] = pk
-        people.append(return_data)
+    with get_session() as session:
+        for line in csv_data:
+            person_data = dict(zip(headers, [item.strip() for item in line]))
+            instance = Person(**person_data)
+            person, created = add_person(session, instance)
+            return_data = person.dict(exclude={"id"})
+            return_data["created"] = created
+            people.append(return_data)
 
-    commit(db)
+        session.commit()
+
     return people
 
 
-def read(dept=None, email=None):
-    db = connect()
-    results = []
-    for pk, person in db["people"].items():
-        item = {
-            "e-mail": pk,
-            "dept": person.get("department"),
-            "role": person.get("role"),
-            "name": person.get("name"),
-            "balance": db["balance"].get(pk, 0),
-            "last_movement": (
-                db["movement"][pk][-1]["date"]
-                if pk in db["movement"] and db["movement"][pk]
-                else None
-            ),
-        }
-        if dept and item["dept"] != dept:
-            continue
-        if email and item["e-mail"] != email:
-            continue
-        results.append(item)
-    return results
+def read(**query: Query) -> ResultDict:
+    query = {k: v for k, v in query.items() if v is not None}
+    return_data = []
+
+    query_statements = []
+    if "dept" in query:
+        query_statements.append(Person.dept == query["dept"])
+
+    if "email" in query:
+        query_statements.append(Person.email == query["email"])
+
+    sql = select(Person)
+    if query_statements:
+        sql = sql.where(*query_statements)
+
+    with get_session() as session:
+        results = session.exec(sql)
+        for person in results:
+            return_data.append(
+                {
+                    "email": person.email,
+                    "balance": person.balance[0].value,
+                    "last_movement": person.movement[-1].date.strftime(
+                        DATEFMT
+                    ),
+                    **person.dict(exclude={"id"}),
+                }
+            )
+
+    return return_data
 
 
-def add(value, **query):
+def add(value: int, **query: Query):
     """Add value to each record on query."""
+    query = {k: v for k, v in query.items() if v is not None}
     people = read(**query)
-    if not people:
-        raise RuntimeError("No records found.")
 
-    db = connect()
-    user = os.getenv("USER")
-    for person in people:
-        add_movement(db, person["e-mail"], value, user)
-    commit(db)
+    if not people:
+        raise RuntimeError("No results found.")
+
+    with get_session() as session:
+        user = os.getenv("USER")
+        for person in people:
+            instance = session.exec(
+                select(Person).where(Person.email == person["email"])
+            ).first()
+            add_movement(session, instance, value, user)
+
+        session.commit()
