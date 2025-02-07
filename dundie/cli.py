@@ -34,7 +34,7 @@ def load(filepath):
     - Loads to the database.
     """
     table = Table(title="Dundler Mifflin Employees")
-    headers = ["email", "name", "dept", "role", "created"]
+    headers = ["email", "name", "dept", "role", "currency", "created"]
 
     for header in headers:
         table.add_column(header, style="cyan")
@@ -68,6 +68,8 @@ def show(output, **query):
         table.add_column(key.title(), style="cyan")
 
     for person in result:
+        person["value"] =f"{person["value"]:.2f}"
+        person["balance"] =f"{person["balance"]:.2f}"
         table.add_row(*[str(value) for value in person.values()])
 
     console = Console()
