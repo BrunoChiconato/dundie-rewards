@@ -57,3 +57,25 @@ pip install -e '.[dev]'
 ```py
 dundie load assets/people.csv
 ```
+
+## Issues
+
+Link to the issues: [Issues](https://github.com/rochacbruno/dundie-rewards/milestone/4)
+
+- [ ] Write functional unit and integration tests.
+- [ ] Write documentation.
+- [ ] Implement the `transfer` CLI command.
+- [ ] Implement the `movements` CLI command.
+- [ ] Employees that are **managers** must pass their e-mail and password to access their account, view their points balance, transaction history, transfer points to other employees, assign points to a specific employee or an entire department, and load employee data.
+    - Managers can execute the following comands:
+        - `dundie load`;
+        - `dundie show`;
+        - `dundie add`;
+        - `dundie remove`;
+        - `dundie transfer`;
+        - `dundie movements`;
+- [ ] Employees must pass their e-mail and password to access their account and view their points balance, transaction history, and transfer points to other employees. Employees that are not **managers** can't see other employees or deparment accounts.
+    - Employees can execute the following comands:
+        - `dundie show`;
+        - `dundie transfer`;
+        - `dundie movements`;
