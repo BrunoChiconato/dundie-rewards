@@ -1,9 +1,9 @@
 import json
 
-import pkg_resources
-import rich_click as click
-from rich.console import Console
-from rich.table import Table
+import pkg_resources  # type: ignore
+import rich_click as click  # type: ignore
+from rich.console import Console  # type: ignore
+from rich.table import Table  # type: ignore
 
 from dundie import core
 
