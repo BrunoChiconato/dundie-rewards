@@ -1,8 +1,8 @@
 from datetime import datetime
 from typing import List, Optional
 
-from pydantic import condecimal, validator  # type: ignore
-from sqlmodel import Field, Relationship, SQLModel  # type: ignore
+from pydantic import condecimal, validator
+from sqlmodel import Field, Relationship, SQLModel
 
 from dundie.utils.email import check_valid_email
 from dundie.utils.user import generate_simple_password

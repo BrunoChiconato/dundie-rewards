@@ -1,10 +1,11 @@
 """Core module of dundie"""
 
 import os
+import sys
 from csv import reader
 from typing import Any, Dict, List
 
-from sqlmodel import select  # type: ignore
+from sqlmodel import select
 
 from dundie.database import get_session
 from dundie.models import Person
@@ -19,42 +20,60 @@ Query = Dict[str, Any]
 ResultDict = List[Dict[str, Any]]
 
 
-def load(filepath):
-    """Loads data from filepath to a databse."""
-    try:
-        csv_data = reader(open(filepath))
-    except FileNotFoundError as e:
-        log.error(str(e))
-        raise e
+@require_auth
+def load(filepath: str, from_person: Person) -> list:
+    """Loads data from filepath to a database."""
 
-    people = []
-    headers = ["name", "dept", "role", "email", "currency"]
+    if from_person.role != "Manager":
+        print("You are not authorized to load data.")
+        sys.exit(1)
+    else:
+        try:
+            csv_data = reader(open(filepath))
+        except FileNotFoundError as e:
+            log.error(str(e))
+            raise e
 
-    with get_session() as session:
-        for line in csv_data:
-            person_data = dict(zip(headers, [item.strip() for item in line]))
-            instance = Person(**person_data)
-            person, created = add_person(session, instance)
-            return_data = person.dict(exclude={"id"})
-            return_data["created"] = created
-            people.append(return_data)
+        people = []
+        headers = ["name", "dept", "role", "email", "currency"]
 
-        session.commit()
+        with get_session() as session:
+            for line in csv_data:
+                person_data = dict(
+                    zip(headers, [item.strip() for item in line])
+                )
+                instance = Person(**person_data)
+                person, created = add_person(session, instance)
+                return_data = person.dict(exclude={"id"})
+                return_data["created"] = created
+                people.append(return_data)
 
-    return people
+            session.commit()
+
+        return people
 
 
 @require_auth
-def read(**query: Query) -> ResultDict:
+def read(from_person: Person, **query: Query) -> ResultDict:
+    """Read data from the database and filters using query."""
+
     query = {k: v for k, v in query.items() if v is not None}
     return_data = []
 
     query_statements = []
-    if "dept" in query:
+    if "dept" in query and from_person.role == "Manager":
         query_statements.append(Person.dept == query["dept"])
+    elif "dept" in query and from_person.role != "Manager":
+        print("You are not authorized to filter by department.")
+        sys.exit(1)
 
-    if "email" in query:
+    if "email" in query and from_person.role == "Manager":
         query_statements.append(Person.email == query["email"])
+    elif "email" in query and query["email"] == from_person.email:
+        query_statements.append(Person.email == from_person.email)
+    elif "email" in query and query["email"] != from_person.email:
+        print("You are not authorized to filter emails other than yours.")
+        sys.exit(1)
 
     sql = select(Person)
     if query_statements:

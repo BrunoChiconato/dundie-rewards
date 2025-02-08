@@ -1,11 +1,12 @@
 import sys
 from functools import wraps
+from getpass import getpass
 
-from sqlalchemy.orm import selectinload  # type: ignore
-from sqlmodel import select  # type: ignore
+from sqlalchemy.orm import selectinload
+from sqlmodel import select
 
 from dundie.database import get_session
-from dundie.models import Person, User
+from dundie.models import Person
 
 
 class AuthenticationError(Exception):
@@ -13,11 +14,13 @@ class AuthenticationError(Exception):
 
 
 def require_auth(func):
+    """Decorator to require authentication."""
+
     @wraps(func)
     def wrapper(*args, **kwargs):
         try:
             input_email = input("Enter your email: ").strip()
-            input_password = input("Enter your password: ").strip()
+            input_password = getpass("Enter your password: ").strip()
 
             if not input_email or not input_password:
                 raise AuthenticationError("Email or password cannot be empty!")
@@ -41,8 +44,8 @@ def require_auth(func):
 
             return func(*args, from_person=person, **kwargs)
 
-        except AuthenticationError as e:
-            print(str(e))
+        except AuthenticationError:
+            print("Authentication error")
             sys.exit(1)
 
     return wrapper
