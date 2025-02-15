@@ -21,6 +21,9 @@ def main():
     """Dundie Mifflin Rewards System
 
     This CLI application controls Dundie Mifflin Rewards System.
+
+    - admins can load information to the people database and assign points.
+    - users can view reports and transfer points.
     """
 
 
@@ -80,19 +83,15 @@ def show(output, **query):
 @click.argument("value", type=click.INT, required=True)
 @click.option("--dept", required=False)
 @click.option("--email", required=False)
-@click.pass_context
-def add(ctx, value, **query):
+def add(value, **query):
     """Add points to employees or departments."""
     core.add(value, **query)
-    ctx.invoke(show, **query)
 
 
 @main.command()
 @click.argument("value", type=click.INT, required=True)
 @click.option("--dept", required=False)
 @click.option("--email", required=False)
-@click.pass_context
-def remove(ctx, value, **query):
+def remove(value, **query):
     """Remove points to employees or departments."""
     core.add(-value, **query)
-    ctx.invoke(show, **query)

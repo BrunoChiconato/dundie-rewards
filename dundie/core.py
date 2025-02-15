@@ -23,61 +23,70 @@ ResultDict = List[Dict[str, Any]]
 @require_auth
 def load(filepath: str, from_person: Person) -> list:
     """Loads data from filepath to a database."""
+    try:
+        if from_person.role != "Manager":
+            raise RuntimeError(
+                "You need to be a manager to perform this action."
+            )
+        else:
+            try:
+                csv_data = reader(open(filepath))
+            except FileNotFoundError as e:
+                log.error(str(e))
+                raise e
 
-    if from_person.role != "Manager":
-        print("You are not authorized to load data.")
+            people = []
+            headers = ["name", "dept", "role", "email", "currency"]
+
+            with get_session() as session:
+                for line in csv_data:
+                    person_data = dict(
+                        zip(headers, [item.strip() for item in line])
+                    )
+                    instance = Person(**person_data)
+                    person, created = add_person(session, instance)
+                    return_data = person.dict(exclude={"id"})
+                    return_data["created"] = created
+                    people.append(return_data)
+
+                session.commit()
+
+            return people
+    except Exception as e:
+        print(str(e))
         sys.exit(1)
-    else:
-        try:
-            csv_data = reader(open(filepath))
-        except FileNotFoundError as e:
-            log.error(str(e))
-            raise e
-
-        people = []
-        headers = ["name", "dept", "role", "email", "currency"]
-
-        with get_session() as session:
-            for line in csv_data:
-                person_data = dict(
-                    zip(headers, [item.strip() for item in line])
-                )
-                instance = Person(**person_data)
-                person, created = add_person(session, instance)
-                return_data = person.dict(exclude={"id"})
-                return_data["created"] = created
-                people.append(return_data)
-
-            session.commit()
-
-        return people
 
 
 @require_auth
 def read(from_person: Person, **query: Query) -> ResultDict:
     """Read data from the database and filters using query."""
-
     query = {k: v for k, v in query.items() if v is not None}
     return_data = []
 
     query_statements = []
-    if "dept" in query and from_person.role == "Manager":
-        query_statements.append(Person.dept == query["dept"])
-    elif "dept" in query and from_person.role != "Manager":
-        print("You are not authorized to filter by department.")
-        sys.exit(1)
+    try:
+        if "dept" in query and from_person.role == "Manager":
+            query_statements.append(Person.dept == query["dept"])
+        elif "dept" in query and from_person.role != "Manager":
+            raise RuntimeError(
+                "You need to be a manager to perform this action."
+            )
 
-    if "email" in query and from_person.role == "Manager":
-        query_statements.append(Person.email == query["email"])
-    elif "email" in query and query["email"] == from_person.email:
-        query_statements.append(Person.email == from_person.email)
-    elif "email" in query and query["email"] != from_person.email:
-        print("You are not authorized to filter emails other than yours.")
+        if "email" in query and from_person.role == "Manager":
+            query_statements.append(Person.email == query["email"])
+        elif "email" in query and from_person.email != query["email"]:
+            raise RuntimeError(
+                "You need to be a manager to perform this action."
+            )
+    except Exception as e:
+        print(str(e))
         sys.exit(1)
 
     sql = select(Person)
-    if query_statements:
+    if query_statements or from_person.role == "Manager":
         sql = sql.where(*query_statements)
+    elif query_statements or from_person.role != "Manager":
+        sql = sql.where(Person.email == from_person.email)
 
     with get_session() as session:
         currencies = session.exec(
@@ -102,20 +111,30 @@ def read(from_person: Person, **query: Query) -> ResultDict:
     return return_data
 
 
-def add(value: int, **query: Query):
+@require_auth
+def add(value: int, from_person: Person, **query: Query):
     """Add value to each record on query."""
-    query = {k: v for k, v in query.items() if v is not None}
-    people = read(**query)
+    try:
+        if from_person.role != "Manager":
+            raise RuntimeError(
+                "You need to be a manager to perform this action."
+            )
+        else:
+            query = {k: v for k, v in query.items() if v is not None}
+            people = read(**query)
 
-    if not people:
-        raise RuntimeError("No results found.")
+            if not people:
+                raise RuntimeError("No results found.")
 
-    with get_session() as session:
-        user = os.getenv("USER")
-        for person in people:
-            instance = session.exec(
-                select(Person).where(Person.email == person["email"])
-            ).first()
-            add_movement(session, instance, value, user)
+            with get_session() as session:
+                user = os.getenv("USER")
+                for person in people:
+                    instance = session.exec(
+                        select(Person).where(Person.email == person["email"])
+                    ).first()
+                    add_movement(session, instance, value, user)
 
-        session.commit()
+                session.commit()
+    except Exception as e:
+        print(str(e))
+        sys.exit(1)

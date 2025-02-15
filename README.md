@@ -68,14 +68,14 @@ Link to the issues: [Issues](https://github.com/rochacbruno/dundie-rewards/miles
 - [ ] Implement the `movements` CLI command.
 - [ ] **Managers** must pass their e-mail and password to access their account, view their points balance, transaction history, transfer points to other employees, assign points to a specific employee or an entire department, and load employee data.
     - Managers can execute the following comands:
-        - `dundie load`;
-        - `dundie show`;
-        - `dundie add`;
-        - `dundie remove`;
-        - `dundie transfer`;
-        - `dundie movements`;
+        - [X] `dundie load`;
+        - [X] `dundie show`;
+        - [X] `dundie add`;
+        - [X]`dundie remove`;
+        - [ ]`dundie transfer`;
+        - [ ]`dundie movements`;
 - [ ] Employees must pass their e-mail and password to access their account and view their points balance, transaction history, and transfer points to other employees. Employees can't see other employees or deparment accounts.
     - Employees can execute the following comands:
-        - `dundie show`;
-        - `dundie transfer`;
-        - `dundie movements`;
+        - [X] `dundie show`;
+        - [ ] `dundie transfer`;
+        - [ ] `dundie movements`;
