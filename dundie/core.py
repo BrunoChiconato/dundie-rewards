@@ -179,3 +179,24 @@ def transfer(value: int, to: str, from_person: Person):
     except Exception as e:
         print(str(e))
         sys.exit(1)
+
+
+@require_auth
+def movements(from_person: Person) -> ResultDict:
+    """Get movements from a employee."""
+    return_data = []
+
+    sql = select(Person)
+    sql = sql.where(Person.email == from_person.email)
+
+    with get_session() as session:
+        results = session.exec(sql)
+        for person in results:
+            for movement in reversed(person.movement):
+                return_data.append({
+                    "date": movement.date.strftime(DATEFMT),
+                    "value": movement.value,
+                    "actor": movement.actor,
+                })
+
+    return return_data
