@@ -1,3 +1,4 @@
+"""Models module."""
 from datetime import datetime
 from typing import List, Optional
 
@@ -13,6 +14,27 @@ class InvalidEmailError(Exception):
 
 
 class Person(SQLModel, table=True):
+    """Person model.
+
+    Attributes:
+        id: Optional[int] - Person's ID.
+        email: str - Person's email.
+        name: str - Person's name.
+        dept: str - Person's department.
+        role: str - Person's role.
+        currency: str - Person's currency.
+        balance: List[Balance] - Person's balance.
+        movement: List[Movement] - Person's movements.
+        user: User - Person's user.
+
+    Methods:
+        validate_email(cls, v: str) -> str - Validates the email.
+        __str__() -> str - Returns a string representation of the person.
+
+    Raises:
+        InvalidEmailError - Raised when the email is invalid.
+    """
+
     id: Optional[int] = Field(default=None, primary_key=True, index=True)
     email: str = Field(nullable=False, index=True)
     name: str = Field(nullable=False)
@@ -35,6 +57,21 @@ class Person(SQLModel, table=True):
 
 
 class Balance(SQLModel, table=True):
+    """Balance model.
+
+    Attributes:
+        id: Optional[int] - Balance's ID.
+        person_id: int - Person's ID.
+        value: condecimal - Balance's value.
+        person: Person - Person's balance.
+
+    Methods:
+        None
+
+    Raises:
+        None
+    """
+
     id: Optional[int] = Field(default=None, primary_key=True, index=True)
     person_id: int = Field(foreign_key="person.id")
     value: condecimal(decimal_places=3) = Field(default=0)
@@ -46,6 +83,23 @@ class Balance(SQLModel, table=True):
 
 
 class Movement(SQLModel, table=True):
+    """Movement model.
+
+    Attributes:
+        id: Optional[int] - Movement's ID.
+        person_id: int - Person's ID.
+        actor: str - Movement's actor.
+        value: condecimal - Movement's value.
+        date: datetime - Movement's date.
+        person: Person - Person's movement.
+
+    Methods:
+        None
+
+    Raises:
+        None
+    """
+
     id: Optional[int] = Field(default=None, primary_key=True, index=True)
     person_id: int = Field(foreign_key="person.id")
     actor: str = Field(nullable=False, index=True)
@@ -59,6 +113,21 @@ class Movement(SQLModel, table=True):
 
 
 class User(SQLModel, table=True):
+    """User model.
+
+    Attributes:
+        id: Optional[int] - User's ID.
+        person_id: int - Person's ID.
+        password: str - User's password.
+        person: Person - Person's user.
+
+    Methods:
+        None
+
+    Raises:
+        None
+    """
+
     id: Optional[int] = Field(default=None, primary_key=True, index=True)
     person_id: int = Field(foreign_key="person.id")
     password: str = Field(default_factory=generate_simple_password)

@@ -1,5 +1,4 @@
 """Core module of dundie"""
-
 import os
 import sys
 from csv import reader
@@ -22,7 +21,19 @@ ResultDict = List[Dict[str, Any]]
 
 @require_auth
 def load(filepath: str, from_person: Person) -> list:
-    """Loads data from filepath to a database."""
+    """Loads data from filepath to a SQLite database.
+
+    Args:
+        filepath (str): Path to the CSV file.
+        from_person (Person): Person instance.
+
+    Returns:
+        list: List of dictionaries with the added data.
+
+    Raises:
+        RuntimeError: If the person is not a manager.
+        FileNotFoundError: If the file does not exist.
+    """
     try:
         if from_person.role != "Manager":
             raise RuntimeError(
@@ -59,7 +70,18 @@ def load(filepath: str, from_person: Person) -> list:
 
 @require_auth
 def read(from_person: Person, **query: Query) -> ResultDict:
-    """Read data from the database and filters using query."""
+    """Read data from the database and filters using query.
+
+    Args:
+        from_person (Person): Person instance.
+        query (Dict): Query parameters.
+
+    Returns:
+        ResultDict: List of dictionaries with the data.
+
+    Raises:
+        RuntimeError: If the person is not a manager.
+    """
     query = {k: v for k, v in query.items() if v is not None}
     return_data = []
 
@@ -111,8 +133,19 @@ def read(from_person: Person, **query: Query) -> ResultDict:
     return return_data, from_person.role
 
 
-def add(value: int, **query: Query):
-    """Add value to each record on query."""
+def add(value: int, **query: Query) -> None:
+    """Add value to each record on query.
+
+    Args:
+        value (int): Value to add.
+        query (Dict): Query parameters.
+
+    Returns:
+        None: If no results are found.
+
+    Raises:
+        RuntimeError: If the person is not a manager.
+    """
     people, auth_role = read(**query)
 
     try:
@@ -141,8 +174,22 @@ def add(value: int, **query: Query):
 
 
 @require_auth
-def transfer(value: int, to: str, from_person: Person):
-    """Transfer points from one employee to another."""
+def transfer(value: int, to: str, from_person: Person) -> None:
+    """Transfer points from one employee to another.
+
+    Args:
+        value (int): Value to transfer.
+        to (str): Email of the destination employee.
+        from_person (Person): Person instance.
+
+    Returns:
+        None: If no results are found.
+
+    Raises:
+        RuntimeError: If the person is not a manager.
+        RuntimeError: If the origin employee does not have enough balance.
+        RuntimeError: If the origin employee is the same as the destination employee.
+    """
     from_balance = from_person.balance[0].value
     from_email = from_person.email
 
@@ -183,7 +230,14 @@ def transfer(value: int, to: str, from_person: Person):
 
 @require_auth
 def movements(from_person: Person) -> ResultDict:
-    """Get movements from a employee."""
+    """Get movements from a employee.
+
+    Args:
+        from_person (Person): Person instance.
+
+    Returns:
+        ResultDict: List of dictionaries with the data.
+    """
     return_data = []
 
     sql = select(Person)
@@ -193,10 +247,12 @@ def movements(from_person: Person) -> ResultDict:
         results = session.exec(sql)
         for person in results:
             for movement in reversed(person.movement):
-                return_data.append({
-                    "date": movement.date.strftime(DATEFMT),
-                    "value": movement.value,
-                    "actor": movement.actor,
-                })
+                return_data.append(
+                    {
+                        "date": movement.date.strftime(DATEFMT),
+                        "value": movement.value,
+                        "actor": movement.actor,
+                    }
+                )
 
     return return_data

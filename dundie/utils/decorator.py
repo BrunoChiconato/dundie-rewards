@@ -1,3 +1,4 @@
+"""Module to define decorators for the CLI commands."""
 import sys
 from functools import wraps
 from getpass import getpass
@@ -10,12 +11,16 @@ from dundie.models import Person
 
 
 class AuthenticationError(Exception):
+    """Exception raised for authentication errors."""
     pass
 
 
 def require_auth(func):
-    """Decorator to require authentication."""
+    """Decorator to require authentication.
 
+    Args:
+        func (function): Function to decorate.
+    """
     @wraps(func)
     def wrapper(*args, **kwargs):
         try:

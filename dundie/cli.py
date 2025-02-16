@@ -1,3 +1,4 @@
+"""CLI application for Dundie Mifflin Rewards System."""
 import json
 
 import pkg_resources
@@ -17,24 +18,41 @@ click.rich_click.APPEND_METAVARS_HELP = True
 
 @click.group()
 @click.version_option(pkg_resources.get_distribution("dundie").version)
-def main():
+def main() -> None:
     """Dundie Mifflin Rewards System
 
     This CLI application controls Dundie Mifflin Rewards System.
 
-    - admins can load information to the people database and assign points.
-    - users can view reports and transfer points.
+    - Managers can load information to the database, see all employees balances,
+    add and remove points from employees, transfer points between employees, and see their movements.
+    - Employees can see their own balance and movements and transfer points to other employees.
     """
 
 
 @main.command()
 @click.argument("filepath", type=click.Path(exists=True))
 def load(filepath):
-    """Load employees from a CSV file.
+    """Load employees from a CSV file to a SQLite database.
 
     - Validates the CSV file.
     - Parses the CSV file.
     - Loads to the database.
+
+    The CSV file must have the following columns:
+    - name: Employee name.
+    - dept: Department name.
+    - role: Employee role.
+    - email: Employee email.
+    - currency: Currency code.
+
+    Args:
+        filepath (str): Path to the CSV file.
+
+    Returns:
+        None: If the CSV file is not valid.
+
+    Raises:
+        ValueError: If the CSV file is not valid.
     """
     table = Table(title="Dundler Mifflin Employees")
     headers = ["email", "name", "dept", "role", "currency", "created"]
@@ -55,7 +73,22 @@ def load(filepath):
 @click.option("--email", required=False)
 @click.option("--output", default=None)
 def show(output, **query):
-    """Show all employees."""
+    """Show employees and their balances.
+
+    - Managers can filter by department and email.
+    - Employees can only see their own balance.
+
+    Args:
+        output (str): Output file path.
+        dept (str): Department name.
+        email (str): Employee email.
+
+    Returns:
+        None: If no results are found.
+
+    Raises:
+        ValueError: If the output file path is not valid.
+    """
     result, _ = core.read(**query)
 
     if output:
@@ -84,7 +117,16 @@ def show(output, **query):
 @click.option("--dept", required=False)
 @click.option("--email", required=False)
 def add(value, **query):
-    """Add points to employees or departments."""
+    """Add points to employees or departments.
+
+    Args:
+        value (int): Points to add.
+        dept (str): Department name.
+        email (str): Employee email.
+
+    Returns:
+        None: If no results are found.
+    """
     core.add(value, **query)
 
 
@@ -93,7 +135,16 @@ def add(value, **query):
 @click.option("--dept", required=False)
 @click.option("--email", required=False)
 def remove(value, **query):
-    """Remove points to employees or departments."""
+    """Remove points to employees or departments.
+
+    Args:
+        value (int): Points to remove.
+        dept (str): Department name.
+        email (str): Employee email.
+
+    Returns:
+        None: If no results are found.
+    """
     core.add(-value, **query)
 
 
@@ -101,13 +152,24 @@ def remove(value, **query):
 @click.option("--value", type=click.INT, required=True)
 @click.option("--to", required=True)
 def transfer(value: int, to: str):
-    """Transfer points between employees."""
+    """Transfer points between employees.
+
+    Args:
+        value (int): Points to transfer.
+        to (str): Employee email.
+
+    Returns:
+        None: If no results are found.
+    """
     core.transfer(value, to)
 
 
 @main.command()
 def movements():
-    """"""
+    """Show all movements from employees.
+
+    Returns:
+        None: If no results are found"""
     result = core.movements()
 
     if not result:

@@ -1,3 +1,4 @@
+"""Logging utility module."""
 import logging
 import os
 from logging import handlers
@@ -10,8 +11,15 @@ fmt = logging.Formatter(
 )
 
 
-def get_logger(logfile="dundie.log"):
-    """Returns a logger object"""
+def get_logger(logfile="dundie.log") -> logging.Logger:
+    """Returns a logger object.
+
+    Args:
+        logfile (str): Log file name.
+
+    Returns:
+        logging.Logger: Logger object.
+    """
     fh = handlers.RotatingFileHandler(
         logfile,
         maxBytes=300,

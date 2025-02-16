@@ -1,3 +1,4 @@
+"""Setup script for the dundie package."""
 import os
 
 from setuptools import setup, find_packages
@@ -27,7 +28,7 @@ def read_requirements(path):
 
 setup(
     name="dundie",
-    version="0.1.0",  # semantic version
+    version="0.3.0",
     description="Reward Point System for Dunder Mifflin",
     long_description=read("README.md"),
     long_description_content_type="text/markdown",

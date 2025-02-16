@@ -1,14 +1,15 @@
+"""Database connection and session management."""
 import warnings
 
-from sqlalchemy.exc import SAWarning  # type: ignore
-from sqlmodel import Session, create_engine  # type: ignore
-from sqlmodel.sql.expression import Select, SelectOfScalar  # type: ignore
+from sqlalchemy.exc import SAWarning
+from sqlmodel import Session, create_engine
+from sqlmodel.sql.expression import Select, SelectOfScalar
 
 from dundie import models
 from dundie.settings import SQL_CON_STRING
 
-SelectOfScalar.inherit_cache = True  # type: ignore
-Select.inherit_cache = True  # type: ignore
+SelectOfScalar.inherit_cache = True
+Select.inherit_cache = True
 
 warnings.filterwarnings("ignore", category=SAWarning)
 
@@ -17,4 +18,5 @@ models.SQLModel.metadata.create_all(engine)
 
 
 def get_session() -> Session:
+    """Returns a new session."""
     return Session(engine)

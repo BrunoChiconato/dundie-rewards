@@ -12,35 +12,37 @@ We agreed in the contract that the MVP (Minimum Viable Product) will be a versio
 
 The current employee data will be provided in a file that can be in .csv or .json format and this same file can be used for future versions. Name, Department, Position, Email
 
-## MVP - Terminal 0.1.0
+## User Stories
 
-### User Stories:
+### Epic: Administration
 
-#### Epic: Administration
-
-- As an ADMIN, I want to be able to EXECUTE THE COMMAND `dundie load people.txt` to populate the database with employee information.
+- As an ADMIN, I want to be able to EXECUTE THE COMMAND `dundie load assets/people.csv` to populate the database with employee information.
     - For each employee in the file, if they do not already exist in the database, they should be created with an initial score of 100 for managers and 500 for associates. If they already exist, different information should be updated and the score summed.
     - The system should avoid duplicate entries of associates and accept only valid emails.
     - The system should create an initial password for each employee and send it by email.
-    - The data should be stored in an SQL database.
+    - The data should be stored in an SQLite database.
 
 - As an ADMIN, I want to be able to VIEW a report containing employee information in the terminal.
-    - In the terminal, I want to see Name, Email, Points Balance, Last Update Date.
-    - This report should have the option to be saved in a .txt file.
-    - Command: `dundie show --filter|--sort|--limit|--output`
+    - In the terminal, I want to see `Email`, `Balance`, `Last Movement`, `Name`, `Currency`, `Department`, `Role` and `Value`.
+    - This report should have the option to be saved in a .json file.
+    - Command: `dundie show --email|--dept|--output`
 
 - As an ADMIN, I want to be able to assign points to a specific employee or an entire department.
-    - Command: `dundie add --dept|--to --value=100`
+    - Command: `dundie add --dept --value=100`
 
 - As an ADMIN, I want ADMIN operations to be protected by username and password.
 
-#### Epic: Transactions
+### Epic: Transactions
 
 - As an EMPLOYEE, I want to be able to view my points balance and transaction history.
 
 - As an EMPLOYEE, I want to be able to transfer points to another employee.
 
 - As an EMPLOYEE, I want operations to be password-protected, preventing another user from altering my account.
+
+## Pre-requirements
+
+- Python 3.12
 
 ## Installation
 

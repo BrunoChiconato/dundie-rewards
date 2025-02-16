@@ -1,13 +1,15 @@
+"""Module for getting exchange rates."""
 from decimal import Decimal
 from typing import Dict, List
 
-import httpx  # type: ignore
-from pydantic import BaseModel, Field  # type: ignore
+import httpx
+from pydantic import BaseModel, Field
 
 from dundie.settings import API_BASE_URL
 
 
 class USDRate(BaseModel):
+    """Model for USD rate."""
     code: str = Field(default="USD")
     codein: str = Field(default="USD")
     name: str = Field(default="Dolar/Dolar")
@@ -15,7 +17,14 @@ class USDRate(BaseModel):
 
 
 def get_rates(currencies: List[str]) -> Dict[str, USDRate]:
-    """Gets current rate for USD vs Currency"""
+    """Gets current rate for USD vs Currency.
+
+    Args:
+        currencies (List[str]): List of currencies to get rate for.
+
+    Returns:
+        Dict[str, USDRate]: Dictionary of currency and rate.
+    """
     return_data = {}
     for currency in currencies:
         if currency == "USD":

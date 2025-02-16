@@ -1,19 +1,27 @@
+"""Database utilities."""
 from typing import Optional
 
-from sqlmodel import Session, select  # type: ignore
+from sqlmodel import Session, select
 
 from dundie.models import Balance, Movement, Person, User
 from dundie.settings import EMAIL_FROM
 from dundie.utils.email import send_email
 
 
-def add_person(session: Session, instance: Person):
+def add_person(session: Session, instance: Person) -> tuple[Person, bool]:
     """Add person to database.
 
     - Email is unique (resolved by dictionary hash table).
     - If exists, update, ele create.
     - Set initial balance (managers = 100, others = 500).
     - Generate a password if user is new and send email.
+
+    Args:
+        session (Session): Database session.
+        instance (Person): Person instance.
+
+    Returns:
+        tuple[Person, bool]: Person instance and created flag.
     """
     existing = session.exec(
         select(Person).where(Person.email == instance.email)
@@ -37,14 +45,27 @@ def add_person(session: Session, instance: Person):
 
 
 def set_initial_password(session: Session, instance: Person) -> str:
-    """Generate and saves a simple password."""
+    """Generate and saves a simple password.
+    
+    Args:
+        session (Session): Database session.
+        instance (Person): Person instance.
+    
+    Returns:
+        str: Generated password.
+    """
     user = User(person=instance)
     session.add(user)
     return user.password
 
 
 def set_initial_balance(session: Session, person: Person):
-    """Add movement and set initial balance."""
+    """Add movement and set initial balance.
+    
+    Args:
+        session (Session): Database session.
+        person (Person): Person instance.
+    """
     value = 100 if person.role == "Manager" else 500
     add_movement(session, person, value)
 
@@ -55,7 +76,14 @@ def add_movement(
     value: int,
     actor: Optional[str] = "system",
 ):
-    """Add movement to balance."""
+    """Add movement to balance.
+
+    Args:
+        session (Session): Database session.
+        person (Person): Person instance.
+        value (int): Value to add.
+        actor (str, optional): Actor who added the movement. Defaults to "system".
+    """
     movement = Movement(person=person, value=value, actor=actor)
     session.add(movement)
 
