@@ -56,7 +56,7 @@ def load(filepath):
 @click.option("--output", default=None)
 def show(output, **query):
     """Show all employees."""
-    result = core.read(**query)
+    result, _ = core.read(**query)
 
     if output:
         with open(output, "w") as output_file:
@@ -95,3 +95,11 @@ def add(value, **query):
 def remove(value, **query):
     """Remove points to employees or departments."""
     core.add(-value, **query)
+
+
+@main.command()
+@click.option("--value", type=click.INT, required=True)
+@click.option("--to", required=True)
+def transfer(value: int, to: str):
+    """Transfer points between employees."""
+    core.transfer(value, to)

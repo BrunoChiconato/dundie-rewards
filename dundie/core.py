@@ -108,20 +108,20 @@ def read(from_person: Person, **query: Query) -> ResultDict:
                 }
             )
 
-    return return_data
+    return return_data, from_person.role
 
 
-@require_auth
-def add(value: int, from_person: Person, **query: Query):
+def add(value: int, **query: Query):
     """Add value to each record on query."""
+    people, auth_role = read(**query)
+
     try:
-        if from_person.role != "Manager":
+        if auth_role != "Manager":
             raise RuntimeError(
                 "You need to be a manager to perform this action."
             )
         else:
             query = {k: v for k, v in query.items() if v is not None}
-            people = read(**query)
 
             if not people:
                 raise RuntimeError("No results found.")
@@ -135,6 +135,47 @@ def add(value: int, from_person: Person, **query: Query):
                     add_movement(session, instance, value, user)
 
                 session.commit()
+    except Exception as e:
+        print(str(e))
+        sys.exit(1)
+
+
+@require_auth
+def transfer(value: int, to: str, from_person: Person):
+    """Transfer points from one employee to another."""
+    from_balance = from_person.balance[0].value
+    from_email = from_person.email
+
+    try:
+        if from_balance < value:
+            raise RuntimeError("Insufficient balance.")
+
+        if from_email == to:
+            raise RuntimeError("You cannot transfer to yourself.")
+
+        with get_session() as session:
+            user = os.getenv("USER")
+
+            from_instance = session.exec(
+                select(Person).where(Person.email == from_email)
+            ).first()
+            if not from_instance:
+                raise RuntimeError(
+                    f"Origin employee ({from_email}) not found."
+                )
+
+            add_movement(session, from_instance, -value, user)
+
+            user = os.getenv("USER")
+            to_instance = session.exec(
+                select(Person).where(Person.email == to)
+            ).first()
+            if not to_instance:
+                raise RuntimeError(f"Destination employee ({to}) not found.")
+
+            add_movement(session, to_instance, value, user)
+
+            session.commit()
     except Exception as e:
         print(str(e))
         sys.exit(1)
