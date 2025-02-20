@@ -1,4 +1,5 @@
 """Core module of dundie"""
+
 import os
 import sys
 from csv import reader
@@ -9,8 +10,8 @@ from sqlmodel import select
 from dundie.database import get_session
 from dundie.models import Person
 from dundie.settings import DATEFMT
+from dundie.utils.auth import requires_auth
 from dundie.utils.db import add_movement, add_person
-from dundie.utils.decorator import require_auth
 from dundie.utils.exchange import get_rates
 from dundie.utils.log import get_logger
 
@@ -19,7 +20,6 @@ Query = Dict[str, Any]
 ResultDict = List[Dict[str, Any]]
 
 
-@require_auth
 def load(filepath: str, from_person: Person) -> list:
     """Loads data from filepath to a SQLite database.
 
@@ -68,7 +68,6 @@ def load(filepath: str, from_person: Person) -> list:
         sys.exit(1)
 
 
-@require_auth
 def read(from_person: Person, **query: Query) -> ResultDict:
     """Read data from the database and filters using query.
 
@@ -133,7 +132,8 @@ def read(from_person: Person, **query: Query) -> ResultDict:
     return return_data, from_person.role
 
 
-def add(value: int, **query: Query) -> None:
+@requires_auth
+def add(value: int, from_person: Person, **query: Query) -> None:
     """Add value to each record on query.
 
     Args:
@@ -146,34 +146,32 @@ def add(value: int, **query: Query) -> None:
     Raises:
         RuntimeError: If the person is not a manager.
     """
-    people, auth_role = read(**query)
+    query = {k: v for k, v in query.items() if v is not None}
+    people = read(**query)
 
-    try:
-        if auth_role != "Manager":
-            raise RuntimeError(
-                "You need to be a manager to perform this action."
-            )
-        else:
-            query = {k: v for k, v in query.items() if v is not None}
+    if not people:
+        raise RuntimeError("No results found.")
 
-            if not people:
-                raise RuntimeError("No results found.")
+    total = len(people) * value
+    if from_person.balance[0].value < total and not from_person.superuser:
+        raise RuntimeError("Not enough balance to transer.")
 
-            with get_session() as session:
-                user = os.getenv("USER")
-                for person in people:
-                    instance = session.exec(
-                        select(Person).where(Person.email == person["email"])
-                    ).first()
-                    add_movement(session, instance, value, user)
+    with get_session() as session:
+        for person in people:
+            add_instance = session.exec(
+                select(Person).where(Person.email == person["email"])
+            ).first()
+            add_movement(session, add_instance, value, from_person.email)
 
-                session.commit()
-    except Exception as e:
-        print(str(e))
-        sys.exit(1)
+            if not from_person.superuser:
+                remove_instance = session.exec(
+                    select(Person).where(Person.email == from_person.email)
+                ).first()
+                add_movement(session, remove_instance, -value, person["email"])
+
+        session.commit()
 
 
-@require_auth
 def transfer(value: int, to: str, from_person: Person) -> None:
     """Transfer points from one employee to another.
 
@@ -188,7 +186,8 @@ def transfer(value: int, to: str, from_person: Person) -> None:
     Raises:
         RuntimeError: If the person is not a manager.
         RuntimeError: If the origin employee does not have enough balance.
-        RuntimeError: If the origin employee is the same as the destination employee.
+        RuntimeError: If the origin employee is the same as the destination
+        employee.
     """
     from_balance = from_person.balance[0].value
     from_email = from_person.email
@@ -228,7 +227,6 @@ def transfer(value: int, to: str, from_person: Person) -> None:
         sys.exit(1)
 
 
-@require_auth
 def movements(from_person: Person) -> ResultDict:
     """Get movements from a employee.
 

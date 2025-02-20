@@ -1,4 +1,5 @@
 """CLI application for Dundie Mifflin Rewards System."""
+
 import json
 
 import pkg_resources
@@ -23,9 +24,11 @@ def main() -> None:
 
     This CLI application controls Dundie Mifflin Rewards System.
 
-    - Managers can load information to the database, see all employees balances,
-    add and remove points from employees, transfer points between employees, and see their movements.
-    - Employees can see their own balance and movements and transfer points to other employees.
+    - Managers can load information to the database,
+    see all employees balances, add and remove points from employees, transfer
+    points between employees, and see their movements.
+    - Employees can see their own balance and movements
+    and transfer points to other employees.
     """
 
 
@@ -116,7 +119,8 @@ def show(output, **query):
 @click.argument("value", type=click.INT, required=True)
 @click.option("--dept", required=False)
 @click.option("--email", required=False)
-def add(value, **query):
+@click.pass_context
+def add(ctx, value, **query):
     """Add points to employees or departments.
 
     Args:
@@ -128,13 +132,15 @@ def add(value, **query):
         None: If no results are found.
     """
     core.add(value, **query)
+    ctx.invoke(show, **query)
 
 
 @main.command()
 @click.argument("value", type=click.INT, required=True)
 @click.option("--dept", required=False)
 @click.option("--email", required=False)
-def remove(value, **query):
+@click.pass_context
+def remove(ctx, value, **query):
     """Remove points to employees or departments.
 
     Args:
@@ -146,6 +152,7 @@ def remove(value, **query):
         None: If no results are found.
     """
     core.add(-value, **query)
+    ctx.invoke(show, **query)
 
 
 @main.command()

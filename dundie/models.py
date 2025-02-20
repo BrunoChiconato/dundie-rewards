@@ -1,4 +1,5 @@
 """Models module."""
+
 from datetime import datetime
 from typing import List, Optional
 
@@ -46,6 +47,10 @@ class Person(SQLModel, table=True):
     movement: List["Movement"] = Relationship(back_populates="person")
     user: "User" = Relationship(back_populates="person")
 
+    @property
+    def superuser(self):
+        return self.email.split("@")[0] in ("schrute", "scott")
+
     @validator("email")
     def validate_email(cls, v: str) -> str:
         if not check_valid_email(v):
@@ -73,7 +78,9 @@ class Balance(SQLModel, table=True):
     """
 
     id: Optional[int] = Field(default=None, primary_key=True, index=True)
-    person_id: int = Field(foreign_key="person.id")
+    person_id: int = Field(
+        foreign_key="person.id", sa_column_kwargs={"unique": True}
+    )
     value: condecimal(decimal_places=3) = Field(default=0)
 
     person: Person = Relationship(back_populates="balance")
@@ -129,7 +136,9 @@ class User(SQLModel, table=True):
     """
 
     id: Optional[int] = Field(default=None, primary_key=True, index=True)
-    person_id: int = Field(foreign_key="person.id")
+    person_id: int = Field(
+        foreign_key="person.id", sa_column_kwargs={"unique": True}
+    )
     password: str = Field(default_factory=generate_simple_password)
 
     person: Person = Relationship(back_populates="user")
