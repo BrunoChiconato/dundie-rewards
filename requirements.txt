@@ -5,3 +5,5 @@ pydantic
 sqlmodel
 alembic
 httpx
+setuptools
+pwdlib[argon2]

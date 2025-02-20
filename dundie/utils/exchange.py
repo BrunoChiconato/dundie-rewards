@@ -1,4 +1,5 @@
 """Module for getting exchange rates."""
+
 from decimal import Decimal
 from typing import Dict, List
 
@@ -10,6 +11,7 @@ from dundie.settings import API_BASE_URL
 
 class USDRate(BaseModel):
     """Model for USD rate."""
+
     code: str = Field(default="USD")
     codein: str = Field(default="USD")
     name: str = Field(default="Dolar/Dolar")

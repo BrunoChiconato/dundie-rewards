@@ -47,7 +47,7 @@ def requires_auth(func):
             if not person:
                 raise AuthenticationError("User doesn't exist.")
             # TODO: Encrypt the password
-            if person.user[0].password != password:
+            if person.user.password != password:
                 raise AuthenticationError("Authentication Error.")
 
         return func(*args, from_person=person, **kwargs)

@@ -1,4 +1,5 @@
 """User utilities."""
+
 from random import sample
 from string import ascii_letters, digits
 

@@ -92,7 +92,7 @@ def show(output, **query):
     Raises:
         ValueError: If the output file path is not valid.
     """
-    result, _ = core.read(**query)
+    result = core.read(**query)
 
     if output:
         with open(output, "w") as output_file:
@@ -153,42 +153,3 @@ def remove(ctx, value, **query):
     """
     core.add(-value, **query)
     ctx.invoke(show, **query)
-
-
-@main.command()
-@click.option("--value", type=click.INT, required=True)
-@click.option("--to", required=True)
-def transfer(value: int, to: str):
-    """Transfer points between employees.
-
-    Args:
-        value (int): Points to transfer.
-        to (str): Employee email.
-
-    Returns:
-        None: If no results are found.
-    """
-    core.transfer(value, to)
-
-
-@main.command()
-def movements():
-    """Show all movements from employees.
-
-    Returns:
-        None: If no results are found"""
-    result = core.movements()
-
-    if not result:
-        print("No results found.")
-
-    table = Table(title="Dundler Mifflin Movements")
-    for key in result[0]:
-        table.add_column(key.title(), style="cyan")
-
-    for person in result:
-        person["value"] = f"{person['value']:.2f}"
-        table.add_row(*[str(value) for value in person.values()])
-
-    console = Console()
-    console.print(table)

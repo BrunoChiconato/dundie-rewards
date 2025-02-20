@@ -49,7 +49,7 @@ class Person(SQLModel, table=True):
 
     @property
     def superuser(self):
-        return self.email.split("@")[0] in ("schrute", "scott")
+        return self.role == "Manager"
 
     @validator("email")
     def validate_email(cls, v: str) -> str:

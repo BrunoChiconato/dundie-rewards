@@ -1,4 +1,5 @@
 """Database connection and session management."""
+
 import warnings
 
 from sqlalchemy.exc import SAWarning

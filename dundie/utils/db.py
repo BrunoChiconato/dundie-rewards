@@ -1,4 +1,5 @@
 """Database utilities."""
+
 from typing import Optional
 
 from sqlmodel import Session, select
@@ -46,11 +47,11 @@ def add_person(session: Session, instance: Person) -> tuple[Person, bool]:
 
 def set_initial_password(session: Session, instance: Person) -> str:
     """Generate and saves a simple password.
-    
+
     Args:
         session (Session): Database session.
         instance (Person): Person instance.
-    
+
     Returns:
         str: Generated password.
     """
@@ -61,7 +62,7 @@ def set_initial_password(session: Session, instance: Person) -> str:
 
 def set_initial_balance(session: Session, person: Person):
     """Add movement and set initial balance.
-    
+
     Args:
         session (Session): Database session.
         person (Person): Person instance.
@@ -82,7 +83,8 @@ def add_movement(
         session (Session): Database session.
         person (Person): Person instance.
         value (int): Value to add.
-        actor (str, optional): Actor who added the movement. Defaults to "system".
+        actor (str, optional): Actor who added the movement.
+        Defaults to "system".
     """
     movement = Movement(person=person, value=value, actor=actor)
     session.add(movement)

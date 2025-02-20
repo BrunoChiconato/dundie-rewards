@@ -1,4 +1,5 @@
 """Email utilities."""
+
 import re
 import smtplib
 from email.mime.text import MIMEText

@@ -57,4 +57,4 @@ jobs:
   #         pip install -r requirements.test.txt
   #         pip install -e .
   #     - name: Run tests
-  #       run: pytest -v --forked
+  #       run: pytest -v --cov=dundie --forked

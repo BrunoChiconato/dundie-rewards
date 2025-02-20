@@ -1,6 +1,10 @@
 pytest
 pytest-forked
+coverage
+pytest-cov
 flake8
 pyproject-flake8
 black
 isort
+mypy
+types-setuptools

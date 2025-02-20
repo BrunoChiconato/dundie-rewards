@@ -1,6 +1,5 @@
 """Core module of dundie"""
 
-import os
 import sys
 from csv import reader
 from typing import Any, Dict, List
@@ -19,27 +18,18 @@ log = get_logger()
 Query = Dict[str, Any]
 ResultDict = List[Dict[str, Any]]
 
+# TODO: Modify prints to logging
 
-def load(filepath: str, from_person: Person) -> list:
-    """Loads data from filepath to a SQLite database.
 
-    Args:
-        filepath (str): Path to the CSV file.
-        from_person (Person): Person instance.
+@requires_auth
+def load(filepath: str, from_person: Person) -> ResultDict:
+    """Loads data from filepath to the database.
 
-    Returns:
-        list: List of dictionaries with the added data.
-
-    Raises:
-        RuntimeError: If the person is not a manager.
-        FileNotFoundError: If the file does not exist.
+    >>> len(load('assets/people.csv'))
+    2
     """
     try:
-        if from_person.role != "Manager":
-            raise RuntimeError(
-                "You need to be a manager to perform this action."
-            )
-        else:
+        if from_person.superuser:
             try:
                 csv_data = reader(open(filepath))
             except FileNotFoundError as e:
@@ -63,194 +53,96 @@ def load(filepath: str, from_person: Person) -> list:
                 session.commit()
 
             return people
+        else:
+            raise RuntimeError("You can not perform this action!")
     except Exception as e:
         print(str(e))
         sys.exit(1)
 
 
+@requires_auth
 def read(from_person: Person, **query: Query) -> ResultDict:
-    """Read data from the database and filters using query.
+    """Read data from db and filters using query
 
-    Args:
-        from_person (Person): Person instance.
-        query (Dict): Query parameters.
-
-    Returns:
-        ResultDict: List of dictionaries with the data.
-
-    Raises:
-        RuntimeError: If the person is not a manager.
+    read(email="joe@doe.com")
     """
     query = {k: v for k, v in query.items() if v is not None}
     return_data = []
 
     query_statements = []
     try:
-        if "dept" in query and from_person.role == "Manager":
+        if "dept" in query and from_person.superuser:
             query_statements.append(Person.dept == query["dept"])
-        elif "dept" in query and from_person.role != "Manager":
-            raise RuntimeError(
-                "You need to be a manager to perform this action."
-            )
+        elif "dept" in query and not from_person.superuser:
+            raise RuntimeError("You can not perform this action!")
 
-        if "email" in query and from_person.role == "Manager":
+        if "email" in query and from_person.superuser:
             query_statements.append(Person.email == query["email"])
-        elif "email" in query and from_person.email != query["email"]:
-            raise RuntimeError(
-                "You need to be a manager to perform this action."
+        elif "email" in query and not from_person.superuser:
+            raise RuntimeError("You can not perform this action!")
+        else:
+            query_statements.append(Person.email == from_person.email)
+
+        sql = select(Person)
+        if query_statements:
+            sql = sql.where(*query_statements)
+
+        with get_session() as session:
+            currencies = session.exec(
+                select(Person.currency).distinct(Person.currency)
             )
+            rates = get_rates(currencies)
+            results = session.exec(sql)
+            for person in results:
+                total = rates[person.currency].values * person.balance[0].value
+                return_data.append(
+                    {
+                        "email": person.email,
+                        "balance": person.balance[0].value,
+                        "last_movement": person.movement[-1].date.strftime(
+                            DATEFMT
+                        ),
+                        **person.dict(exclude={"id"}),
+                        **{"value": total},
+                    }
+                )
+
+        return return_data
+
     except Exception as e:
         print(str(e))
         sys.exit(1)
 
-    sql = select(Person)
-    if query_statements or from_person.role == "Manager":
-        sql = sql.where(*query_statements)
-    elif query_statements or from_person.role != "Manager":
-        sql = sql.where(Person.email == from_person.email)
-
-    with get_session() as session:
-        currencies = session.exec(
-            select(Person.currency).distinct(Person.currency)
-        )
-        rates = get_rates(currencies)
-        results = session.exec(sql)
-        for person in results:
-            total = rates[person.currency].values * person.balance[0].value
-            return_data.append(
-                {
-                    "email": person.email,
-                    "balance": person.balance[0].value,
-                    "last_movement": person.movement[-1].date.strftime(
-                        DATEFMT
-                    ),
-                    **person.dict(exclude={"id"}),
-                    **{"value": total},
-                }
-            )
-
-    return return_data, from_person.role
-
 
 @requires_auth
-def add(value: int, from_person: Person, **query: Query) -> None:
-    """Add value to each record on query.
-
-    Args:
-        value (int): Value to add.
-        query (Dict): Query parameters.
-
-    Returns:
-        None: If no results are found.
-
-    Raises:
-        RuntimeError: If the person is not a manager.
-    """
+def add(value: int, from_person: Person, **query: Query):
+    """Add value to each record on query"""
     query = {k: v for k, v in query.items() if v is not None}
     people = read(**query)
 
     if not people:
-        raise RuntimeError("No results found.")
+        raise RuntimeError("Not Found")
 
     total = len(people) * value
     if from_person.balance[0].value < total and not from_person.superuser:
-        raise RuntimeError("Not enough balance to transer.")
+        raise RuntimeError(f"Not enough balance to transfer {total}")
 
     with get_session() as session:
         for person in people:
-            add_instance = session.exec(
+            instance = session.exec(
                 select(Person).where(Person.email == person["email"])
             ).first()
-            add_movement(session, add_instance, value, from_person.email)
+            add_movement(session, instance, value, from_person.email)
 
             if not from_person.superuser:
-                remove_instance = session.exec(
+                from_instance = session.exec(
                     select(Person).where(Person.email == from_person.email)
                 ).first()
-                add_movement(session, remove_instance, -value, person["email"])
+                add_movement(
+                    session,
+                    from_instance,
+                    -abs(value),
+                    person["email"],
+                )
 
         session.commit()
-
-
-def transfer(value: int, to: str, from_person: Person) -> None:
-    """Transfer points from one employee to another.
-
-    Args:
-        value (int): Value to transfer.
-        to (str): Email of the destination employee.
-        from_person (Person): Person instance.
-
-    Returns:
-        None: If no results are found.
-
-    Raises:
-        RuntimeError: If the person is not a manager.
-        RuntimeError: If the origin employee does not have enough balance.
-        RuntimeError: If the origin employee is the same as the destination
-        employee.
-    """
-    from_balance = from_person.balance[0].value
-    from_email = from_person.email
-
-    try:
-        if from_balance < value:
-            raise RuntimeError("Insufficient balance.")
-
-        if from_email == to:
-            raise RuntimeError("You cannot transfer to yourself.")
-
-        with get_session() as session:
-            user = os.getenv("USER")
-
-            from_instance = session.exec(
-                select(Person).where(Person.email == from_email)
-            ).first()
-            if not from_instance:
-                raise RuntimeError(
-                    f"Origin employee ({from_email}) not found."
-                )
-
-            add_movement(session, from_instance, -value, user)
-
-            user = os.getenv("USER")
-            to_instance = session.exec(
-                select(Person).where(Person.email == to)
-            ).first()
-            if not to_instance:
-                raise RuntimeError(f"Destination employee ({to}) not found.")
-
-            add_movement(session, to_instance, value, user)
-
-            session.commit()
-    except Exception as e:
-        print(str(e))
-        sys.exit(1)
-
-
-def movements(from_person: Person) -> ResultDict:
-    """Get movements from a employee.
-
-    Args:
-        from_person (Person): Person instance.
-
-    Returns:
-        ResultDict: List of dictionaries with the data.
-    """
-    return_data = []
-
-    sql = select(Person)
-    sql = sql.where(Person.email == from_person.email)
-
-    with get_session() as session:
-        results = session.exec(sql)
-        for person in results:
-            for movement in reversed(person.movement):
-                return_data.append(
-                    {
-                        "date": movement.date.strftime(DATEFMT),
-                        "value": movement.value,
-                        "actor": movement.actor,
-                    }
-                )
-
-    return return_data
