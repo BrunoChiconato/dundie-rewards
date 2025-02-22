@@ -17,25 +17,25 @@ jobs:
       fail-fast: true
       matrix:
         os: [ubuntu-latest]
-        python-version: ["3.12"]
+        python-version: ["3.13"]
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v3
       - uses: actions/setup-python@v4
         with:
           python-version: ${{ matrix.python-version }}
-      - name: Install dependencies
-        run: |
-          python -m pip install --upgrade pip
-          pip install --upgrade setuptools
-          pip install -r requirements.test.txt
-          pip install -e .
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v3
+
+      - name: Install the project
+        run: uv sync --all-extras --dev
+
       - name: Look for style errors
-        run: pflake8
-      - name: Check for importing style
-        run: isort --profile=black --check --diff dundie tests integration
-      - name: Look for auto formatting errors
-        run: black --check --diff dundie tests integration
+        run: uv run task lint
+
+      - name: Look for formatting errors
+        run: uvx ruff format --dif dundie tests integration
 
   # tests:
   #   needs: lint
@@ -43,18 +43,22 @@ jobs:
   #     fail-fast: false
   #     matrix:
   #       os: [ubuntu-latest]
-  #       python-version: ["3.9", "3.10", "3.11", "3.12"]
+  #       python-version: ["3.10", "3.11", "3.13"]
   #   runs-on: ${{ matrix.os }}
   #   steps:
   #     - uses: actions/checkout@v3
   #     - uses: actions/setup-python@v4
   #       with:
   #         python-version: ${{ matrix.python-version }}
-  #     - name: Install dependencies
-  #       run: |
-  #         python -m pip install --upgrade pip
-  #         pip install --upgrade setuptools
-  #         pip install -r requirements.test.txt
-  #         pip install -e .
+  #
+  #     - name: Install uv
+  #       uses: astral-sh/setup-uv@v3
+  #
+  #     - name: Set up Python ${{ matrix.python-version }}
+  #       run: uv python install ${{ matrix.python-version }}
+  #
+  #     - name: Install the project
+  #       run: uv sync --all-extras --dev
+  #
   #     - name: Run tests
-  #       run: pytest -v --cov=dundie --forked
+  #       run: uv run --extra test pytest -v --cov=dundie --forked

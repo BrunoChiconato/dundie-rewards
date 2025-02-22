@@ -1,3 +1,53 @@
+[project]
+name="dundie"
+description="Reward Point System for Dunder Mifflin"
+authors=[
+    {name="Bruno Chiconato", email="brunochiconato01@gmail.com"}
+]
+requires-python = ">=3.9"
+license = {text = "MIT"}
+dynamic = ["version", "readme"]
+dependencies = [
+    "alembic>=1.14.1",
+    "click>=8.1.8",
+    "httpx>=0.28.1",
+    "pwdlib[argon2]>=0.2.1",
+    "pydantic>=2.10.6",
+    "rich>=13.9.4",
+    "rich-click>=1.8.6",
+    "setuptools>=75.8.0",
+    "sqlmodel>=0.0.22",
+]
+
+[project.urls]
+Homepage = "https://dundermifflin.com"
+Source = "https://github.com/BrunoChiconato/dundie-rewards"
+
+[project.scripts]
+dundie = "dundie.__main__:main"
+
+[project.optional-dependencies]
+test = [
+    "coverage>=7.6.12",
+    "pytest>=8.3.4",
+    "pytest-cov>=6.0.0",
+    "pytest-forked>=1.6.0",
+    "types-setuptools>=75.8.0.20250210",
+]
+
+[build-system]
+requires = ["setuptools>=4.5", "setuptools_scm[toml]>=6.2"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools]
+packages = ["dundie"]
+
+[tool.setuptools.dynamic]
+readme = {file = ["README.md"]}
+
+[tool.setuptools_scm]
+write_to = "dundie/VERSION.txt"
+
 [tool.pytest.ini_options]
 minversion = "6.0"
 addopts = "-ra -q -vv"
@@ -6,31 +56,34 @@ testpaths = [
     "integration",
 ]
 
-[tool.flake8]
-exclude = [
-    ".venv",
-    "build",
+[dependency-groups]
+dev = [
+    "ipdb>=0.13.13",
+    "pytest-watch>=4.2.0",
+    "taskipy>=1.14.1",
+    "types-setuptools>=75.8.0.20250210",
 ]
-max-line-length = 79
-ignore = "F401"
 
-[tool.black]
+[tool.ruff]
 line-length = 79
-target-version = ['py36', 'py37']
-exclude = '''
-/(
-      \.git,
-    | \.eggs,
-    | \.venv,
-    | __pycache__,
-    | _build,
-    | build,
-    | migrations,
-    | dist,
-)/
-'''
+indent-width = 4
+target-version = "py310"
 
-[tool.isort]
-profile = "black"
-src_paths = ["dundie", "tests", "integration"]
-multi_line_output = 3
+[tool.taskipy.tasks]
+lint = {cmd = "uvx ruff check dundie integration tests", help = "Linter"}
+fmt = {cmd = "uvx ruff format dundie integration tests", help = "Formatter"}
+test = {cmd = """
+    uv run --extra test pytest -s --cov=dundie --forked
+    uv run --extra test coverage xml
+    uv run --extra test coverage html
+    """, help = "Tests"}
+docs = {cmd = "uvx mkdocs build --clean", help = "Build Docs"}
+docs-serve = {cmd = "uvx mkdocs serve", help = "Run Docs"}
+clean = {cmd = """
+    find ./ -name '*.pyc' -exec rm -f {} \\;
+    find ./ -name '__pycache__' -exec rm -rf {} \\;
+    find ./ -name 'Thumbs.db' -exec rm -f {} \\;
+    find ./ -name '*~' -exec rm -f {} \\;
+    rm -rf {.cache, .pytest_cache, .mypy_cache, htmlcov, docs/_build}
+    """, help = "Clean unused files"}
+reset_db = {cmd = "bash -c 'read -p \"Are you sure you want to reset the project database? [y/N] \" -n 1 -r; echo; if [[ $REPLY =~ ^[Yy]$ ]]; then rm -rf assets/database.db; uv run dundie load assets/people.csv; uv run alembic stamp head; fi'", help = "Reset Database"}

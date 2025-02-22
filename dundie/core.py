@@ -19,44 +19,38 @@ Query = Dict[str, Any]
 ResultDict = List[Dict[str, Any]]
 
 # TODO: Modify prints to logging
+# BUG: When cloning a new repo, the user doesnt have a way to authenticate.
 
 
-def load(filepath: str, from_person: Person) -> ResultDict:
+def load(filepath: str) -> ResultDict:
     """Loads data from filepath to the database.
 
     >>> len(load('assets/people.csv'))
     2
     """
     try:
-        if from_person.superuser:
-            try:
-                csv_data = reader(open(filepath))
-            except FileNotFoundError as e:
-                log.error(str(e))
-                raise e
+        csv_data = reader(open(filepath))
+    except FileNotFoundError as e:
+        log.error(str(e))
+        raise e
 
-            people = []
-            headers = ["name", "dept", "role", "email", "currency"]
+    people = []
+    headers = ["name", "dept", "role", "email", "currency"]
 
-            with get_session() as session:
-                for line in csv_data:
-                    person_data = dict(
-                        zip(headers, [item.strip() for item in line])
-                    )
-                    instance = Person(**person_data)
-                    person, created = add_person(session, instance)
-                    return_data = person.dict(exclude={"id"})
-                    return_data["created"] = created
-                    people.append(return_data)
+    with get_session() as session:
+        for line in csv_data:
+            person_data = dict(
+                zip(headers, [item.strip() for item in line])
+            )
+            instance = Person(**person_data)
+            person, created = add_person(session, instance)
+            return_data = person.dict(exclude={"id"})
+            return_data["created"] = created
+            people.append(return_data)
 
-                session.commit()
+        session.commit()
 
-            return people
-        else:
-            raise RuntimeError("You can not perform this action!")
-    except Exception as e:
-        print(str(e))
-        sys.exit(1)
+    return people
 
 
 @requires_auth
