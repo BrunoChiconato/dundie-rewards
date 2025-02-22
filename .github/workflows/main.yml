@@ -35,7 +35,7 @@ jobs:
         run: uv run task lint
 
       - name: Look for formatting errors
-        run: uvx ruff format --dif dundie tests integration
+        run: uvx ruff format --diff dundie tests integration
 
   # tests:
   #   needs: lint
