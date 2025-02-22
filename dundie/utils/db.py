@@ -1,15 +1,22 @@
 """Database utilities."""
 
+from __future__ import annotations
+
 from typing import Optional
 
 from sqlmodel import Session, select
 
 from dundie.models import Balance, Movement, Person, User
 from dundie.settings import EMAIL_FROM
-from dundie.utils.email import send_email
+from dundie.utils.email import create_pw_txt
+from dundie.utils.user import generate_simple_password, get_password_hash
 
 
-def add_person(session: Session, instance: Person) -> tuple[Person, bool]:
+def add_person(
+    session: Session,
+    instance: Person,
+    password: str | None = None,
+) -> tuple[Person, bool]:
     """Add person to database.
 
     - Email is unique (resolved by dictionary hash table).
@@ -29,15 +36,19 @@ def add_person(session: Session, instance: Person) -> tuple[Person, bool]:
     ).first()
 
     created = existing is None
+
     if created:
         session.add(instance)
+
         set_initial_balance(session, instance)
-        password = set_initial_password(session, instance)
-        # TODO: Usar sistema de filas para envio de email
-        send_email(EMAIL_FROM, instance.email, "Your password", password)
+
+        password = set_initial_password(session, instance, password)
+
+        create_pw_txt(instance.email, password)
 
         return instance, created
-    else:
+
+    elif isinstance(existing, Person):
         existing.dept = instance.dept
         existing.role = instance.role
         existing.currency = instance.currency
@@ -45,7 +56,9 @@ def add_person(session: Session, instance: Person) -> tuple[Person, bool]:
         return instance, created
 
 
-def set_initial_password(session: Session, instance: Person) -> str:
+def set_initial_password(
+    session: Session, instance: Person, password: str | None = None
+) -> str:
     """Generate and saves a simple password.
 
     Args:
@@ -56,11 +69,16 @@ def set_initial_password(session: Session, instance: Person) -> str:
         str: Generated password.
     """
     user = User(person=instance)
+
+    if password is None:
+        password = generate_simple_password()
+
+    user.password = get_password_hash(user.password)
     session.add(user)
-    return user.password
+    return password
 
 
-def set_initial_balance(session: Session, person: Person):
+def set_initial_balance(session: Session, person: Person) -> None:
     """Add movement and set initial balance.
 
     Args:
@@ -76,7 +94,7 @@ def add_movement(
     person: Person,
     value: int,
     actor: Optional[str] = "system",
-):
+) -> None:
     """Add movement to balance.
 
     Args:

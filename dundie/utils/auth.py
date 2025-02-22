@@ -8,6 +8,7 @@ from sqlmodel import select
 
 from dundie.database import get_session
 from dundie.models import Person
+from dundie.utils.user import verify_password
 
 
 class AuthenticationError(Exception):
@@ -46,8 +47,8 @@ def requires_auth(func):
 
             if not person:
                 raise AuthenticationError("User doesn't exist.")
-            # TODO: Encrypt the password
-            if person.user.password != password:
+
+            if not verify_password(password, person.user.password):
                 raise AuthenticationError("Authentication Error.")
 
         return func(*args, from_person=person, **kwargs)

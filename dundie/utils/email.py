@@ -1,5 +1,6 @@
 """Email utilities."""
 
+import os
 import re
 import smtplib
 from email.mime.text import MIMEText
@@ -12,23 +13,52 @@ log = get_logger()
 regex = r"\b[A-Za-z0-9._%+\-]+@[A-Za-z0-9.\-]+\.[A-Za-z]{2,}\b"
 
 
-def check_valid_email(adress):
+def check_valid_email(address: str) -> bool:
     """Check if email is valid.
 
     Args:
-        adress (str): Email adress.
+        address (str): Email address.
+
+    Returns:
+        bool: True or False if the emails is a valid one.
     """
-    return bool(re.fullmatch(regex, adress))
+    return bool(re.fullmatch(regex, address))
 
 
-def send_email(from_, to, subject, text):
-    """Send email.
+def create_pw_txt(email: str, plain_password: str) -> None:
+    """Creates a .txt file with all the e-mails and plain passwords
+    of the employees.
+
+    Args:
+        email (str): Employee email address.
+        plain_password(str): Plain password generated at the moment that the
+        employee is loaded to the database.
+
+    Returns:
+        None
+    """
+    txt_path = os.path.abspath("./passwords_txt.txt")
+
+    if os.path.exists(txt_path):
+        with open(txt_path, mode="a") as txt_file:
+            txt_file.write(f"Email: {email} | Password: {plain_password}\n")
+    else:
+        with open(txt_path, mode="w") as txt_file:
+            txt_file.write(f"Email: {email} | Password: {plain_password}\n")
+
+
+# TODO: One day I will get this to work
+def send_email(from_, to, subject, text) -> None:
+    """Sends an email.
 
     Args:
         from_ (str): Sender email.
         to (str or list): Receiver email.
         subject (str): Email subject.
         text (str): Email text.
+
+    Returns:
+        None
     """
     if not isinstance(to, list):
         to = [to]

@@ -21,7 +21,6 @@ ResultDict = List[Dict[str, Any]]
 # TODO: Modify prints to logging
 
 
-@requires_auth
 def load(filepath: str, from_person: Person) -> ResultDict:
     """Loads data from filepath to the database.
 
@@ -120,29 +119,34 @@ def add(value: int, from_person: Person, **query: Query):
     query = {k: v for k, v in query.items() if v is not None}
     people = read(**query)
 
-    if not people:
-        raise RuntimeError("Not Found")
+    try:
+        if not people:
+            raise RuntimeError("Not Found")
 
-    total = len(people) * value
-    if from_person.balance[0].value < total and not from_person.superuser:
-        raise RuntimeError(f"Not enough balance to transfer {total}")
+        total = len(people) * value
+        if from_person.balance[0].value < total and not from_person.superuser:
+            raise RuntimeError(f"Not enough balance to transfer {total}")
 
-    with get_session() as session:
-        for person in people:
-            instance = session.exec(
-                select(Person).where(Person.email == person["email"])
-            ).first()
-            add_movement(session, instance, value, from_person.email)
-
-            if not from_person.superuser:
-                from_instance = session.exec(
-                    select(Person).where(Person.email == from_person.email)
+        with get_session() as session:
+            for person in people:
+                instance = session.exec(
+                    select(Person).where(Person.email == person["email"])
                 ).first()
-                add_movement(
-                    session,
-                    from_instance,
-                    -abs(value),
-                    person["email"],
-                )
+                add_movement(session, instance, value, from_person.email)
 
-        session.commit()
+                if not from_person.superuser:
+                    from_instance = session.exec(
+                        select(Person).where(Person.email == from_person.email)
+                    ).first()
+                    add_movement(
+                        session,
+                        from_instance,
+                        -abs(value),
+                        person["email"],
+                    )
+
+            session.commit()
+
+    except Exception as e:
+        print(str(e))
+        sys.exit(1)

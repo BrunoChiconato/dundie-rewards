@@ -66,7 +66,7 @@ Link to the issues: [Issues](https://github.com/rochacbruno/dundie-rewards/miles
 
 - [ ] Write functional unit and integration tests.
 - [ ] Write documentation.
-- [ ] Implement hash password for employees.
+- [X] Implement hashed passwords for employees.
 - [ ] Calculate code coverage.
 - [ ] Implement the `transfer` CLI command.
 - [ ] Implement the `movements` CLI command.
