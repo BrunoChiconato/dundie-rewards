@@ -39,9 +39,7 @@ def load(filepath: str) -> ResultDict:
 
     with get_session() as session:
         for line in csv_data:
-            person_data = dict(
-                zip(headers, [item.strip() for item in line])
-            )
+            person_data = dict(zip(headers, [item.strip() for item in line]))
             instance = Person(**person_data)
             person, created = add_person(session, instance)
             return_data = person.dict(exclude={"id"})
