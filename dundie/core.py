@@ -13,50 +13,53 @@ from dundie.utils.auth import requires_auth
 from dundie.utils.db import add_movement, add_person
 from dundie.utils.exchange import get_rates
 from dundie.utils.log import get_logger
+from dundie.utils.auth import AuthenticationError
 
 log = get_logger()
 Query = Dict[str, Any]
 ResultDict = List[Dict[str, Any]]
 
 # TODO: Modify prints to logging
-# BUG: When cloning a new repo, the user doesnt have a way to authenticate.
 
 
-def load(filepath: str) -> ResultDict:
-    """Loads data from filepath to the database.
-
-    >>> len(load('assets/people.csv'))
-    2
-    """
+@requires_auth
+def load(filepath: str, from_person: Person) -> ResultDict:
+    """Loads data from filepath to the database."""
     try:
-        csv_data = reader(open(filepath))
-    except FileNotFoundError as e:
-        log.error(str(e))
-        raise e
+        if from_person is None or from_person.superuser:
+            try:
+                csv_data = reader(open(filepath))
+            except FileNotFoundError as e:
+                log.error(str(e))
+                raise e
 
-    people = []
-    headers = ["name", "dept", "role", "email", "currency"]
+            people = []
+            headers = ["name", "dept", "role", "email", "currency"]
 
-    with get_session() as session:
-        for line in csv_data:
-            person_data = dict(zip(headers, [item.strip() for item in line]))
-            instance = Person(**person_data)
-            person, created = add_person(session, instance)
-            return_data = person.dict(exclude={"id"})
-            return_data["created"] = created
-            people.append(return_data)
+            with get_session() as session:
+                for line in csv_data:
+                    person_data = dict(
+                        zip(headers, [item.strip() for item in line])
+                    )
+                    instance = Person(**person_data)
+                    person, created = add_person(session, instance)
+                    return_data = person.dict(exclude={"id"})
+                    return_data["created"] = created
+                    people.append(return_data)
 
-        session.commit()
+                session.commit()
 
-    return people
+            return people
+        else:
+            raise AuthenticationError("You can not perform this action!")
+    except Exception as e:
+        print(str(e))
+        sys.exit(1)
 
 
 @requires_auth
 def read(from_person: Person, **query: Query) -> ResultDict:
-    """Read data from db and filters using query
-
-    read(email="joe@doe.com")
-    """
+    """Read data from db and filters using query."""
     query = {k: v for k, v in query.items() if v is not None}
     return_data = []
 
@@ -107,7 +110,7 @@ def read(from_person: Person, **query: Query) -> ResultDict:
 
 @requires_auth
 def add(value: int, from_person: Person, **query: Query):
-    """Add value to each record on query"""
+    """Add value to each record on query."""
     query = {k: v for k, v in query.items() if v is not None}
     people = read(**query)
 

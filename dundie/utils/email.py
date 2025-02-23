@@ -3,6 +3,7 @@
 import os
 import re
 import smtplib
+from datetime import datetime
 from email.mime.text import MIMEText
 
 from dundie.settings import SMTP_HOST, SMTP_PORT, SMTP_TIMEOUT
@@ -41,10 +42,14 @@ def create_pw_txt(email: str, plain_password: str) -> None:
 
     if os.path.exists(txt_path):
         with open(txt_path, mode="a") as txt_file:
-            txt_file.write(f"Email: {email} | Password: {plain_password}\n")
+            txt_file.write(
+                f"{datetime.now()} | Email: {email} | Password: {plain_password}\n"
+            )
     else:
         with open(txt_path, mode="w") as txt_file:
-            txt_file.write(f"Email: {email} | Password: {plain_password}\n")
+            txt_file.write(
+                f"{datetime.now()} | Email: {email} | Password: {plain_password}\n"
+            )
 
 
 # TODO: One day I will get this to work

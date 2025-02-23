@@ -1,4 +1,4 @@
-"""Module to define decorators for the CLI commands."""
+"""Module to define authentication for the CLI commands."""
 
 import os
 from functools import wraps
@@ -26,6 +26,12 @@ def requires_auth(func):
 
     @wraps(func)
     def wrapper(*args, **kwargs):
+        with get_session() as session:
+            existing_user = session.exec(select(Person)).first()
+
+        if not existing_user:
+            return func(*args, from_person=None, **kwargs)
+
         email = os.getenv("DUNDIE_EMAIL")
         password = os.getenv("DUNDIE_PASSWORD")
 
