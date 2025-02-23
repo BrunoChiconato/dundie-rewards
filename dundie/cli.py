@@ -153,3 +153,25 @@ def remove(ctx, value, **query):
     """
     core.add(-value, **query)
     ctx.invoke(show, **query)
+
+
+@main.command()
+@click.pass_context
+def movements(ctx):
+    result = core.movements()
+
+    if not result:
+        print("No results found.")
+
+    table = Table(title="Dundler Mifflin Movements")
+    for key in result[0]:
+        table.add_column(key.title(), style="cyan")
+
+    for person in result:
+        person["Converted Movement"] = f"{person['Converted Movement']:.2f}"
+        table.add_row(*[str(value) for value in person.values()])
+
+    console = Console()
+    console.print(table)
+
+    ctx.invoke(show)

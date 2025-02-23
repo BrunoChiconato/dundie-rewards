@@ -42,7 +42,7 @@ The current employee data will be provided in a file that can be in .csv or .jso
 
 ## Pre-requirements
 
-- Python 3.12
+- Python 3.10
 
 ## Installation
 
@@ -69,17 +69,17 @@ Link to the issues: [Issues](https://github.com/rochacbruno/dundie-rewards/miles
 - [X] Implement hashed passwords for employees.
 - [ ] Calculate code coverage.
 - [ ] Implement the `transfer` CLI command.
-- [ ] Implement the `movements` CLI command.
-- [ ] **Managers** must pass their e-mail and password to access their account, view their points balance, transaction history, transfer points to other employees, assign points to a specific employee or an entire department, and load employee data.
+- [X] Implement the `movements` CLI command.
+- **Managers** must pass their e-mail and password to access their account, view their points balance, transaction history, transfer points to other employees, assign points to a specific employee or an entire department, and load employee data.
     - Managers can execute the following comands:
         - [X] `dundie load`;
         - [X] `dundie show`;
         - [X] `dundie add`;
         - [X] `dundie remove`;
         - [ ] `dundie transfer`;
-        - [ ] `dundie movements`;
-- [ ] **Employees** must pass their e-mail and password to access their account and view their points balance, transaction history, and transfer points to other employees. Employees can't see other employees or deparment accounts and load employee data.
+        - [X] `dundie movements`;
+- **Employees** must pass their e-mail and password to access their account and view their points balance, transaction history, and transfer points to other employees. Employees can't see other employees or deparment accounts and load employee data.
     - Employees can execute the following comands:
         - [X] `dundie show`;
         - [ ] `dundie transfer`;
-        - [ ] `dundie movements`;
+        - [X] `dundie movements`;

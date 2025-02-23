@@ -69,8 +69,10 @@ def set_initial_password(
     """
     user = User(person=instance)
 
-    if password is None:
-        password = generate_simple_password()
+    if password is not None:
+        user.password = password
+    else:
+        password = user.password
 
     user.password = get_password_hash(user.password)
     session.add(user)

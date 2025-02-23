@@ -74,7 +74,7 @@ def read(from_person: Person, **query: Query) -> ResultDict:
             query_statements.append(Person.email == query["email"])
         elif "email" in query and not from_person.superuser:
             raise RuntimeError("You can not perform this action!")
-        else:
+        elif not from_person.superuser:
             query_statements.append(Person.email == from_person.email)
 
         sql = select(Person)
@@ -93,7 +93,7 @@ def read(from_person: Person, **query: Query) -> ResultDict:
                     {
                         "email": person.email,
                         "balance": person.balance[0].value,
-                        "last_movement": person.movement[-1].date.strftime(
+                        "last movement": person.movement[-1].date.strftime(
                             DATEFMT
                         ),
                         **person.dict(exclude={"id"}),
@@ -145,3 +145,40 @@ def add(value: int, from_person: Person, **query: Query):
     except Exception as e:
         print(str(e))
         sys.exit(1)
+
+
+@requires_auth
+def movements(from_person: Person) -> ResultDict:
+    """Read data from db and filters using query."""
+    return_data = []
+
+    query_statements = []
+
+    if not from_person.superuser:
+        query_statements.append(Person.email == from_person.email)
+
+    sql = select(Person)
+    if query_statements:
+        sql = sql.where(*query_statements)
+
+    with get_session() as session:
+        currencies = session.exec(
+            select(Person.currency).distinct(Person.currency)
+        )
+        rates = get_rates(currencies)
+        results = session.exec(sql)
+        for person in results:
+            for movement in person.movement:
+                total = rates[person.currency].values * movement.value
+                return_data.append(
+                    {
+                        "Name": person.name,
+                        "Date": movement.date.strftime(DATEFMT),
+                        "Movement": movement.value,
+                        "Converted Movement": total,
+                        "Actor": movement.actor
+                    }
+                )
+    return_data = sorted(return_data, key=lambda x: x["Date"], reverse=True)
+
+    return return_data
