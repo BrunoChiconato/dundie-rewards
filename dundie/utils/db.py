@@ -8,7 +8,7 @@ from sqlmodel import Session, select
 
 from dundie.models import Balance, Movement, Person, User
 from dundie.utils.email import create_pw_txt
-from dundie.utils.user import generate_simple_password, get_password_hash
+from dundie.utils.user import get_password_hash
 
 
 def add_person(

@@ -176,7 +176,7 @@ def movements(from_person: Person) -> ResultDict:
                         "Date": movement.date.strftime(DATEFMT),
                         "Movement": movement.value,
                         "Converted Movement": total,
-                        "Actor": movement.actor
+                        "Actor": movement.actor,
                     }
                 )
     return_data = sorted(return_data, key=lambda x: x["Date"], reverse=True)
