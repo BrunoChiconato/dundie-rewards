@@ -1,4 +1,17 @@
-"""CLI application for Dundie Mifflin Rewards System."""
+"""Dundie Mifflin Rewards System CLI
+
+This application allows managers and employees to interact with the rewards system.
+Managers can:
+  - Load employee data from a CSV file into the database.
+  - View all employee balances.
+  - Add or remove points for employees.
+  - Transfer points between employees.
+  - Review transaction movements.
+
+Employees can:
+  - Check their own account balance and transaction history.
+  - Transfer points to other employees.
+"""
 
 import json
 
@@ -8,6 +21,7 @@ from rich.console import Console
 from rich.table import Table
 
 from dundie import core
+from typing import Any, Dict
 
 click.rich_click.USE_RICH_MARKUP = True
 click.rich_click.USE_MARKDOWN = True
@@ -16,46 +30,50 @@ click.rich_click.GROUP_ARGUMENTS_OPTIONS = True
 click.rich_click.SHOW_METAVARS_COLUMN = False
 click.rich_click.APPEND_METAVARS_HELP = True
 
+Query = Dict[str, Any]
+
 
 @click.group()
 @click.version_option(pkg_resources.get_distribution("dundie").version)
 def main() -> None:
-    """Dundie Mifflin Rewards System
+    """Dundie Mifflin Rewards System CLI
 
-    This CLI application controls Dundie Mifflin Rewards System.
+    This application allows managers and employees to interact with the rewards system.
+    - Managers can:
+        - Load employee data from a CSV file into the database.
+        - View all employee balances.
+        - Add or remove points for employees.
+        - Transfer points between employees.
+        - Review transaction movements.
 
-    - Managers can load information to the database,
-    see all employees balances, add and remove points from employees, transfer
-    points between employees, and see their movements.
-    - Employees can see their own balance and movements
-    and transfer points to other employees.
+    - Employees can:
+        - Check their own account balance and transaction history.
+        - Transfer points to other employees.
     """
 
 
 @main.command()
 @click.argument("filepath", type=click.Path(exists=True))
-def load(filepath):
-    """Load employees from a CSV file to a SQLite database.
+def load(filepath: str) -> None:
+    """Load employee data from a CSV file into the SQLite database.
 
-    - Validates the CSV file.
-    - Parses the CSV file.
-    - Loads to the database.
+    This command performs the following steps:
+      - Validates the CSV file format.
+      - Parses the CSV file.
+      - Imports the data into the database.
 
-    The CSV file must have the following columns:
-    - name: Employee name.
-    - dept: Department name.
-    - role: Employee role.
-    - email: Employee email.
-    - currency: Currency code.
+    The CSV file must contain the following columns:
+      - name: Employee's full name.
+      - dept: Department name.
+      - role: Employee role.
+      - email: Employee email address.
+      - currency: Currency code.
 
     Args:
-        filepath (str): Path to the CSV file.
+        filepath (str): The file path to the CSV file.
 
     Returns:
-        None: If the CSV file is not valid.
-
-    Raises:
-        ValueError: If the CSV file is not valid.
+        None
     """
     table = Table(title="Dundler Mifflin Employees")
     headers = ["email", "name", "dept", "role", "currency", "created"]
@@ -75,22 +93,20 @@ def load(filepath):
 @click.option("--dept", required=False)
 @click.option("--email", required=False)
 @click.option("--output", default=None)
-def show(output, **query):
-    """Show employees and their balances.
+def show(output, **query: Query) -> None:
+    """Display employees and their account balances.
 
-    - Managers can filter by department and email.
-    - Employees can only see their own balance.
+    Managers can filter the results by department and email. Employees, however,
+    can only view their own balance.
 
     Args:
-        output (str): Output file path.
-        dept (str): Department name.
-        email (str): Employee email.
+        output (str): (Optional) Path to the output file. If provided, the results
+            are saved to this file.
+        dept (str): (Optional) Department name to filter by.
+        email (str): (Optional) Employee email address to filter by.
 
     Returns:
-        None: If no results are found.
-
-    Raises:
-        ValueError: If the output file path is not valid.
+        None
     """
     result = core.read(**query)
 
@@ -120,16 +136,16 @@ def show(output, **query):
 @click.option("--dept", required=False)
 @click.option("--email", required=False)
 @click.pass_context
-def add(ctx, value, **query):
-    """Add points to employees or departments.
+def add(ctx, value: int, **query: Query) -> None:
+    """Add points to one or more employees or departments.
 
     Args:
-        value (int): Points to add.
-        dept (str): Department name.
-        email (str): Employee email.
+        value (int): The number of points to add.
+        dept (str): (Optional) Department name to which points should be added.
+        email (str): (Optional) Email address of the employee to receive the points.
 
     Returns:
-        None: If no results are found.
+        None
     """
     core.add(value, **query)
     ctx.invoke(show, **query)
@@ -140,24 +156,48 @@ def add(ctx, value, **query):
 @click.option("--dept", required=False)
 @click.option("--email", required=False)
 @click.pass_context
-def remove(ctx, value, **query):
-    """Remove points to employees or departments.
+def remove(ctx, value: int, **query: Query) -> None:
+    """Remove points from one or more employees or departments.
 
     Args:
-        value (int): Points to remove.
-        dept (str): Department name.
-        email (str): Employee email.
+        value (int): The number of points to remove.
+        dept (str): (Optional) Department name from which points should be removed.
+        email (str): (Optional) Email address of the employee from whom points should be removed.
 
     Returns:
-        None: If no results are found.
+        None
     """
     core.add(-value, **query)
     ctx.invoke(show, **query)
 
 
 @main.command()
+@click.option("--value", type=click.INT, required=True)
+@click.option("--to", required=True)
+def transfer(value: int, to: str) -> None:
+    """Transfer points between employees.
+
+    Args:
+        value (int): The number of points to transfer.
+        to (str): The email address of the employee who will receive the points.
+
+    Returns:
+        None
+    """
+    core.transfer(value, to)
+
+
+@main.command()
 @click.pass_context
-def movements(ctx):
+def movements(ctx) -> None:
+    """Display the transaction movements history.
+
+    Managers can view the complete transaction history for all employees, whereas
+    employees can only view their own transactions.
+
+    Returns:
+        None
+    """
     result = core.movements()
 
     if not result:
