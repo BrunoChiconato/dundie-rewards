@@ -27,7 +27,6 @@ Query = Dict[str, Any]
 ResultDict = List[Dict[str, Any]]
 
 # TODO: Modify prints to logging
-# TODO: Review add function
 
 
 @requires_auth
@@ -158,8 +157,7 @@ def add(value: int, from_person: Person, **query: Query) -> None:
     """Add points to selected employee records.
 
     This function adds a specified number of points to every employee record that matches the given
-    filters. For non-superusers, the total points to be added must not exceed the authenticated user's
-    available balance. A corresponding movement record is created for each transaction.
+    filters. A corresponding movement record is created for each transaction.
 
     Args:
         value (int): The number of points to add.
@@ -173,37 +171,24 @@ def add(value: int, from_person: Person, **query: Query) -> None:
         RuntimeError: If no matching records are found or if the authenticated user's balance is insufficient.
         SystemExit: If an error occurs during the addition process.
     """
-    query = {k: v for k, v in query.items() if v is not None}
-    people = read(**query)
-
     try:
-        if not people:
-            raise RuntimeError("Not Found")
+        if from_person.superuser:
+            query = {k: v for k, v in query.items() if v is not None}
+            people = read(**query)
 
-        total = len(people) * value
-        if from_person.balance[0].value < total and not from_person.superuser:
-            raise RuntimeError(f"Not enough balance to transfer {total}")
+            if not people:
+                raise RuntimeError("Not Found")
 
-        with get_session() as session:
-            for person in people:
-                instance = session.exec(
-                    select(Person).where(Person.email == person["email"])
-                ).first()
-                add_movement(session, instance, value, from_person.email)
-
-                if not from_person.superuser:
-                    from_instance = session.exec(
-                        select(Person).where(Person.email == from_person.email)
+            with get_session() as session:
+                for person in people:
+                    instance = session.exec(
+                        select(Person).where(Person.email == person["email"])
                     ).first()
-                    add_movement(
-                        session,
-                        from_instance,
-                        -abs(value),
-                        person["email"],
-                    )
+                    add_movement(session, instance, value, from_person.email)
 
-            session.commit()
-
+                session.commit()
+        else:
+            raise AuthenticationError("You can not perform this action!")
     except Exception as e:
         print(str(e))
         sys.exit(1)
