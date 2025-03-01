@@ -7,7 +7,7 @@ from typing import Optional
 from sqlmodel import Session, select
 
 from dundie.models import Balance, Movement, Person, User
-from dundie.utils.email import create_pw_txt
+from dundie.utils.passwords import create_pw_txt
 from dundie.utils.user import get_password_hash
 
 
