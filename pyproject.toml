@@ -50,7 +50,7 @@ write_to = "dundie/VERSION.txt"
 
 [tool.pytest.ini_options]
 minversion = "6.0"
-addopts = "-ra -q -vv"
+addopts = "-ra -q -vv -p no:warnings"
 testpaths = [
     "tests",
     "integration",

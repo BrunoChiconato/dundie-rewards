@@ -1,5 +1,5 @@
 import os
-import datetime
+from datetime import datetime
 
 
 def create_pw_txt(email: str, plain_password: str) -> None:

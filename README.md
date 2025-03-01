@@ -62,9 +62,7 @@ dundie load assets/people.csv
 
 ## Issues
 
-Link to the issues: [Issues](https://github.com/rochacbruno/dundie-rewards/milestone/4)
-
-- [ ] Write functional unit and integration tests.
+- [X] Write functional unit and integration tests.
 - [ ] Write documentation.
 - [X] Implement hashed passwords for employees.
 - [ ] Calculate code coverage.

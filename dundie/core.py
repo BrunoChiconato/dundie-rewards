@@ -7,7 +7,6 @@ between employees, and retrieving transaction movements. All operations require 
 authentication.
 """
 
-import sys
 from csv import reader
 from typing import Any, Dict, List
 
@@ -81,7 +80,7 @@ def load(filepath: str, from_person: Person) -> ResultDict:
             raise AuthenticationError("You can not perform this action!")
     except Exception as e:
         print(str(e))
-        sys.exit(1)
+        raise e
 
 
 @requires_auth
@@ -149,7 +148,7 @@ def read(from_person: Person, **query: Query) -> ResultDict:
 
     except Exception as e:
         print(str(e))
-        sys.exit(1)
+        raise e
 
 
 @requires_auth
@@ -191,7 +190,7 @@ def add(value: int, from_person: Person, **query: Query) -> None:
             raise AuthenticationError("You can not perform this action!")
     except Exception as e:
         print(str(e))
-        sys.exit(1)
+        raise e
 
 
 @requires_auth
@@ -256,7 +255,7 @@ def transfer(value: int, to_person: str, from_person: Person) -> None:
 
     except Exception as e:
         print(str(e))
-        sys.exit(1)
+        raise e
 
 
 @requires_auth

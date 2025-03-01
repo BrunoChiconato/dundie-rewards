@@ -3,9 +3,8 @@
 from datetime import datetime
 from typing import List, Optional
 
-from pydantic import condecimal, validator
+from pydantic import condecimal, field_validator
 from sqlmodel import Field, Relationship, SQLModel
-
 from dundie.utils.email import check_valid_email
 from dundie.utils.user import generate_simple_password
 
@@ -51,7 +50,7 @@ class Person(SQLModel, table=True):
     def superuser(self):
         return self.role == "Manager"
 
-    @validator("email")
+    @field_validator("email")
     def validate_email(cls, v: str) -> str:
         if not check_valid_email(v):
             raise InvalidEmailError(f"Invalid email: {v}")

@@ -10,17 +10,17 @@ from .constants import PEOPLE_FILE
 
 @pytest.fixture(scope="function", autouse=True)
 def auth(monkeypatch):
-    with get_session() as session, monkeypatch.context() as m:
+    with get_session() as session, monkeypatch.context() as ctx:
         data = {
             "role": "Manager",
             "dept": "Management",
-            "name": "Joe Doe",
-            "email": "joe@doe.com",
+            "name": "Michael Scott",
+            "email": "scott@dm.com",
         }
         password = "1234"
         person, _ = add_person(session, Person(**data), password)
-        m.setenv("DUNDIE_EMAIL", person.email)
-        m.setenv("DUNDIE_PASSWORD", password)
+        ctx.setenv("DUNDIE_EMAIL", person.email)
+        ctx.setenv("DUNDIE_PASSWORD", password)
         session.commit()
         yield
 
@@ -72,10 +72,10 @@ def test_add_balance_for_dept():
 @pytest.mark.unit
 def test_add_balance_for_person():
     load(PEOPLE_FILE)
-    original = read(email="jim@dundlermifflin.com")
+    original = read(email="jim@dundiermifflin.com")
 
-    add(-30, email="jim@dundlermifflin.com")
+    add(-30, email="jim@dundiermifflin.com")
 
-    modified = read(email="jim@dundlermifflin.com")
+    modified = read(email="jim@dundiermifflin.com")
     for index, person in enumerate(modified):
         assert person["balance"] == original[index]["balance"] - 30
