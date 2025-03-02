@@ -7,7 +7,7 @@ on:
   pull_request:
     branches:
       - main
-  
+
   workflow_dispatch:
 
 
@@ -50,15 +50,20 @@ jobs:
       - uses: actions/setup-python@v4
         with:
           python-version: ${{ matrix.python-version }}
-  
+
       - name: Install uv
         uses: astral-sh/setup-uv@v3
-  
+
       - name: Set up Python ${{ matrix.python-version }}
         run: uv python install ${{ matrix.python-version }}
-  
+
       - name: Install the project
         run: uv sync --all-extras --dev
-  
+
       - name: Run tests
-        run: uv run --extra test pytest -v --cov=dundie --forked
+        run: uv run --extra test pytest -v --cov=dundie --forked --cov-report=xml
+
+      - name: Upload coverage reports to Codecov
+        uses: codecov/codecov-action@v5
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}

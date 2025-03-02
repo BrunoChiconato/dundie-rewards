@@ -90,3 +90,39 @@ def test_add_or_remove_points_for_person():
     assert after == before - 100
     assert after == 400
     assert before == 500
+
+
+@pytest.mark.unit
+def test_update_existing_user():
+    initial_data = {
+        "role": "Salesman",
+        "dept": "Sales",
+        "name": "Joe Doe",
+        "email": "joe@doe.com",
+        "currency": "USD",
+    }
+    session = get_session()
+    person, created = add_person(session, Person(**initial_data))
+    session.commit()
+
+    assert created is True
+
+    updated_data = {
+        "role": "Manager",
+        "dept": "Marketing",
+        "name": "Joe Doe",
+        "email": "joe@doe.com",
+        "currency": "EUR",
+    }
+
+    updated_person, created = add_person(session, Person(**updated_data))
+    session.commit()
+
+    assert created is False
+
+    person_db = session.exec(
+        select(Person).where(Person.email == "joe@doe.com")
+    ).first()
+    assert person_db.dept == "Marketing"
+    assert person_db.role == "Manager"
+    assert person_db.currency == "EUR"

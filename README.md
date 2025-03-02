@@ -1,6 +1,6 @@
 # Dundie Rewards Project
 
-[![CI](https://github.com/BrunoChiconato/dundie-rewards/actions/workflows/main.yml/badge.svg)](https://github.com/BrunoChiconato/dundie-rewards/actions/workflows/main.yml)
+[![CI](https://github.com/BrunoChiconato/dundie-rewards/actions/workflows/main.yml/badge.svg)](https://github.com/BrunoChiconato/dundie-rewards/actions/workflows/main.yml) [![Python 3.10|3.11|3.12|3.13](https://img.shields.io/badge/Python-3.10%20|%203.11%20|%203.12%20|%203.13-blue.svg)](#) [![codecov](https://codecov.io/gh/BrunoChiconato/dundie-rewards/graph/badge.svg?token=EGKFE6ZWQP)](https://codecov.io/gh/BrunoChiconato/dundie-rewards)
 
 We have been hired by Dunder Mifflin, a major paper manufacturer, to develop a rewards system for their employees.
 
@@ -65,7 +65,7 @@ dundie load assets/people.csv
 - [X] Write functional unit and integration tests.
 - [ ] Write documentation.
 - [X] Implement hashed passwords for employees.
-- [ ] Calculate code coverage.
+- [X] Calculate code coverage.
 - [X] Implement the `transfer` CLI command.
 - [X] Implement the `movements` CLI command.
 - **Managers** must pass their e-mail and password to access their account, view their points balance, transaction history, transfer points to other employees, assign points to a specific employee or an entire department, and load employee data.
