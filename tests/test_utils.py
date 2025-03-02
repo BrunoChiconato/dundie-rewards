@@ -1,6 +1,7 @@
 import pytest
 import httpx
 
+from unittest.mock import MagicMock
 from dundie.models import Person
 from dundie.utils.exchange import get_rates, USDRate
 from dundie.utils.email import check_valid_email
@@ -9,6 +10,7 @@ from dundie.utils.user import (
     get_password_hash,
     verify_password,
 )
+from dundie.utils.auth import requires_auth, AuthenticationError
 
 
 class FakeResponse:
@@ -118,3 +120,130 @@ def test_get_rates_failure(monkeypatch):
 
     assert rates["BRL"].name == "Error"
     assert float(rates["BRL"].values) == 0
+
+
+@pytest.mark.unit
+def test_env_vars_not_found(monkeypatch):
+    monkeypatch.delenv("DUNDIE_EMAIL", raising=False)
+    monkeypatch.delenv("DUNDIE_PASSWORD", raising=False)
+
+    fake_session = MagicMock()
+
+    fake_session.exec.return_value.first.return_value = object()
+
+    class FakeSessionCM:
+        def __enter__(self):
+            return fake_session
+
+        def __exit__(self, exc_type, exc_value, traceback):
+            pass
+
+    monkeypatch.setattr(
+        "dundie.utils.auth.get_session", lambda: FakeSessionCM()
+    )
+
+    decorated_func = requires_auth(
+        lambda *args, **kwargs: kwargs.get("from_person")
+    )
+
+    with pytest.raises(AuthenticationError) as exc_info:
+        decorated_func()
+    assert "Variables DUNDIE_EMAIL and DUNDIE_PASSWORD not definied." in str(
+        exc_info.value
+    )
+
+
+@pytest.mark.unit
+def test_auth_user_not_found(monkeypatch):
+    monkeypatch.setenv("DUNDIE_EMAIL", "test@test.com")
+    monkeypatch.setenv("DUNDIE_PASSWORD", "1234")
+
+    fake_session_first = MagicMock()
+    fake_session_first.exec.return_value.first.return_value = object()
+
+    fake_session_second = MagicMock()
+    fake_session_second.exec.return_value.first.return_value = None
+
+    class FakeSessionCM:
+        def __init__(self, session):
+            self.session = session
+
+        def __enter__(self):
+            return self.session
+
+        def __exit__(self, exc_type, exc_value, traceback):
+            pass
+
+    call_count = 0
+
+    def fake_get_session():
+        nonlocal call_count
+        if call_count == 0:
+            call_count += 1
+            return FakeSessionCM(fake_session_first)
+        else:
+            return FakeSessionCM(fake_session_second)
+
+    monkeypatch.setattr("dundie.utils.auth.get_session", fake_get_session)
+
+    decorated_func = requires_auth(
+        lambda *args, **kwargs: kwargs.get("from_person")
+    )
+
+    with pytest.raises(AuthenticationError) as exc_info:
+        decorated_func()
+
+    assert "User doesn't exist." in str(exc_info.value)
+
+
+@pytest.mark.unit
+def test_auth_incorrect_password(monkeypatch):
+    class DummyUser:
+        password = "hashed_password"
+
+    class DummyPerson:
+        user = DummyUser()
+
+    class FakeSessionCM:
+        def __init__(self, session):
+            self.session = session
+
+        def __enter__(self):
+            return self.session
+
+        def __exit__(self, exc_type, exc_value, traceback):
+            pass
+
+    call_count = 0
+
+    def fake_get_session():
+        nonlocal call_count
+        if call_count == 0:
+            call_count += 1
+            return FakeSessionCM(fake_session_first)
+        else:
+            return FakeSessionCM(fake_session_second)
+
+    monkeypatch.setenv("DUNDIE_EMAIL", "test@test.com")
+    monkeypatch.setenv("DUNDIE_PASSWORD", "1234")
+
+    fake_session_first = MagicMock()
+    fake_session_first.exec.return_value.first.return_value = object()
+
+    fake_session_second = MagicMock()
+    fake_session_second.exec.return_value.first.return_value = DummyPerson()
+
+    monkeypatch.setattr("dundie.utils.auth.get_session", fake_get_session)
+
+    monkeypatch.setattr(
+        "dundie.utils.auth.verify_password", lambda pwd, db_pwd: False
+    )
+
+    decorated_func = requires_auth(
+        lambda *args, **kwargs: kwargs.get("from_person")
+    )
+
+    with pytest.raises(AuthenticationError) as exc_info:
+        decorated_func()
+
+    assert "Authentication Error." in str(exc_info.value)
