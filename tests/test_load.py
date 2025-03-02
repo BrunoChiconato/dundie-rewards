@@ -1,6 +1,9 @@
 import pytest
 
-from dundie.core import load
+from dundie.core import load, add_person
+from dundie.database import get_session
+from dundie.models import Person
+from dundie.utils.auth import AuthenticationError
 
 from .constants import PEOPLE_FILE
 
@@ -25,3 +28,29 @@ def test_negative_filenotfound(request):
     """Test function load function."""
     with pytest.raises(FileNotFoundError):
         load("assets/invalid.csv")
+
+
+@pytest.mark.unit
+def test_not_authorized_load_command(monkeypatch):
+    with get_session() as session:
+        unauthorized_data = {
+            "name": "Jim Doe",
+            "dept": "Sales",
+            "role": "Salesman",
+            "email": "jim@doe.com",
+            "currency": "USD",
+        }
+        password = "1234"
+        unauthorized_person, _ = add_person(
+            session, Person(**unauthorized_data), password
+        )
+
+        monkeypatch.setenv("DUNDIE_EMAIL", unauthorized_person.email)
+        monkeypatch.setenv("DUNDIE_PASSWORD", password)
+
+        session.commit()
+
+    with pytest.raises(AuthenticationError) as exc_info:
+        load(PEOPLE_FILE)
+
+    assert "You can not perform this action!" in str(exc_info.value)

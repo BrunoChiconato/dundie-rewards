@@ -81,3 +81,85 @@ def test_read_only_one_person(monkeypatch):
     load(PEOPLE_FILE)
     result = read(email="jim@dundiermifflin.com")
     assert len(result) == 1
+
+
+@pytest.mark.unit
+def test_not_authorized_read_dept_command(monkeypatch):
+    with get_session() as session:
+        unauthorized_data = {
+            "name": "Jim Doe",
+            "dept": "Sales",
+            "role": "Salesman",
+            "email": "jim@doe.com",
+            "currency": "USD",
+        }
+        password = "1234"
+        unauthorized_person, _ = add_person(
+            session, Person(**unauthorized_data), password
+        )
+
+        monkeypatch.setenv("DUNDIE_EMAIL", unauthorized_person.email)
+        monkeypatch.setenv("DUNDIE_PASSWORD", password)
+
+        session.commit()
+
+    query = {"dept": "Sales"}
+
+    with pytest.raises(RuntimeError) as exc_info:
+        read(**query)
+
+    assert "You can not perform this action!" in str(exc_info.value)
+
+
+@pytest.mark.unit
+def test_not_authorized_read_email_command(monkeypatch):
+    with get_session() as session:
+        unauthorized_data = {
+            "name": "Jim Doe",
+            "dept": "Sales",
+            "role": "Salesman",
+            "email": "jim@doe.com",
+            "currency": "USD",
+        }
+        password = "1234"
+        unauthorized_person, _ = add_person(
+            session, Person(**unauthorized_data), password
+        )
+
+        monkeypatch.setenv("DUNDIE_EMAIL", unauthorized_person.email)
+        monkeypatch.setenv("DUNDIE_PASSWORD", password)
+
+        session.commit()
+
+    query = {"email": "test@test.com"}
+
+    with pytest.raises(RuntimeError) as exc_info:
+        read(**query)
+
+    assert "You can not perform this action!" in str(exc_info.value)
+
+
+@pytest.mark.unit
+def test_employee_read_command(monkeypatch):
+    with get_session() as session:
+        unauthorized_data = {
+            "name": "Jim Doe",
+            "dept": "Sales",
+            "role": "Salesman",
+            "email": "jim@doe.com",
+            "currency": "USD",
+        }
+        password = "1234"
+        unauthorized_person, _ = add_person(
+            session, Person(**unauthorized_data), password
+        )
+
+        monkeypatch.setenv("DUNDIE_EMAIL", unauthorized_person.email)
+        monkeypatch.setenv("DUNDIE_PASSWORD", password)
+
+        session.commit()
+
+        query = {}
+        read(**query)
+
+        assert unauthorized_person.superuser is False
