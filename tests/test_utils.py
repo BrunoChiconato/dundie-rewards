@@ -118,4 +118,3 @@ def test_get_rates_failure(monkeypatch):
 
     assert rates["BRL"].name == "Error"
     assert float(rates["BRL"].values) == 0
-    
