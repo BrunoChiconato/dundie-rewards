@@ -6,6 +6,23 @@ from dundie.models import InvalidEmailError, Person
 from dundie.utils.db import add_movement, add_person
 
 
+@pytest.fixture(scope="function", autouse=True)
+def auth(monkeypatch):
+    with get_session() as session, monkeypatch.context() as ctx:
+        data = {
+            "role": "Manager",
+            "dept": "Management",
+            "name": "Michael Scott",
+            "email": "scott@dm.com",
+        }
+        password = "1234"
+        person, _ = add_person(session, Person(**data), password)
+        ctx.setenv("DUNDIE_EMAIL", person.email)
+        ctx.setenv("DUNDIE_PASSWORD", password)
+        session.commit()
+        yield
+
+
 @pytest.mark.unit
 def test_ensure_database_is_test():
     session = get_session()
@@ -102,7 +119,7 @@ def test_update_existing_user():
         "currency": "USD",
     }
     session = get_session()
-    person, created = add_person(session, Person(**initial_data))
+    _, created = add_person(session, Person(**initial_data))
     session.commit()
 
     assert created is True
@@ -115,7 +132,7 @@ def test_update_existing_user():
         "currency": "EUR",
     }
 
-    updated_person, created = add_person(session, Person(**updated_data))
+    _, created = add_person(session, Person(**updated_data))
     session.commit()
 
     assert created is False
