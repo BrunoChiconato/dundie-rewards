@@ -87,10 +87,7 @@ def test_add_balance_for_person():
 
 @pytest.mark.unit
 def test_add_to_a_inexistent_person():
-    query = {
-        "value": 100,
-        "email": "inexistent@person.com"
-    }
+    query = {"value": 100, "email": "inexistent@person.com"}
 
     with pytest.raises(RuntimeError) as exc_info:
         add(**query)
@@ -116,10 +113,7 @@ def test_unauth_person_add(monkeypatch):
 
         session.commit()
 
-    query = {
-        "value": 100,
-        "email": "test@person.com"
-    }
+    query = {"value": 100, "email": "test@person.com"}
 
     with pytest.raises(AuthenticationError) as exc_info:
         add(**query)
